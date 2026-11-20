@@ -459,27 +459,38 @@ export default function App() {
             zIndex: 30,
           }}
         >
+          <style>{`
+            .write-sheet {
+              position: relative;
+              background-image: url(${writePanelImg});
+              background-size: 100% 100%;
+              background-repeat: no-repeat;
+              background-position: center;
+              background-color: transparent;
+              color: #3b2818;
+              width: 100%;
+              max-width: 440px;
+              min-height: 580px;
+              max-height: 94dvh;
+              overflow-y: auto;
+              padding: 132px 64px 118px 64px;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+            }
+            @media (max-width: 600px) {
+              .write-sheet {
+                max-width: 420px;
+                min-height: 540px;
+                padding: 124px 56px 112px 56px;
+              }
+            }
+          `}</style>
+
           <form
+            className="write-sheet"
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleDropBottle}
-            style={{
-              position: "relative",
-              backgroundImage: `url(${writePanelImg})`,
-              backgroundSize: "100% 100%",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-              backgroundColor: "transparent",
-              color: "#3b2818",
-              maxWidth: "500px",
-              width: "100%",
-              minHeight: "540px",
-              maxHeight: "92vh",
-              overflowY: "auto",
-              padding: "76px 64px 68px 64px",
-              boxSizing: "border-box",
-              display: "flex",
-              flexDirection: "column",
-            }}
           >
             <div
               style={{
@@ -487,13 +498,13 @@ export default function App() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: "8px",
-                marginBottom: "14px",
+                marginBottom: "12px",
               }}
             >
               <h3
                 style={{
                   margin: 0,
-                  fontSize: "18px",
+                  fontSize: "17px",
                   color: "#0f3460",
                   fontWeight: 700,
                 }}
@@ -505,8 +516,8 @@ export default function App() {
                 onClick={() => setModalMode(null)}
                 aria-label="Đóng"
                 style={{
-                  width: "30px",
-                  height: "30px",
+                  width: "28px",
+                  height: "28px",
                   borderRadius: "999px",
                   border: "1px solid rgba(59, 40, 24, 0.28)",
                   backgroundColor: "transparent",
@@ -531,13 +542,13 @@ export default function App() {
               onChange={(e) => setNickname(e.target.value)}
               style={{
                 width: "100%",
-                padding: "9px 12px",
-                marginBottom: "12px",
+                padding: "9px 11px",
+                marginBottom: "10px",
                 borderRadius: "8px",
                 border: "1px solid rgba(59, 40, 24, 0.28)",
                 backgroundColor: "transparent",
                 color: "#2b1d12",
-                fontSize: "14px",
+                fontSize: "13.5px",
                 outline: "none",
                 boxSizing: "border-box",
               }}
@@ -552,15 +563,15 @@ export default function App() {
               onChange={(e) => setContent(e.target.value)}
               style={{
                 width: "100%",
-                padding: "10px 12px",
+                padding: "10px 11px",
                 borderRadius: "10px",
                 border: "1px solid rgba(59, 40, 24, 0.28)",
                 backgroundColor: "transparent",
                 color: "#2b1d12",
-                fontSize: "14px",
-                lineHeight: 1.55,
+                fontSize: "13.5px",
+                lineHeight: 1.5,
                 resize: "none",
-                minHeight: "135px",
+                minHeight: "125px",
                 outline: "none",
                 boxSizing: "border-box",
               }}
@@ -572,7 +583,7 @@ export default function App() {
                 color: "#5c4632",
                 textAlign: "right",
                 marginTop: "6px",
-                marginBottom: "12px",
+                marginBottom: "10px",
               }}
             >
               {content.length} / 500
@@ -586,7 +597,7 @@ export default function App() {
                   fontSize: "13px",
                   fontWeight: 600,
                   marginTop: 0,
-                  marginBottom: "10px",
+                  marginBottom: "8px",
                 }}
               >
                 {statusMsg}
@@ -605,12 +616,12 @@ export default function App() {
                 type="submit"
                 disabled={loading}
                 style={{
-                  padding: "9px 18px",
+                  padding: "8px 16px",
                   borderRadius: "999px",
                   border: "none",
                   backgroundColor: loading ? "#7dd3fc" : "#0284c7",
                   color: "#ffffff",
-                  fontSize: "14px",
+                  fontSize: "13.5px",
                   fontWeight: 700,
                   cursor: loading ? "not-allowed" : "pointer",
                 }}

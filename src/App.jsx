@@ -27,7 +27,7 @@ const SEEN_BOTTLES_KEY = "bien_xanh_seen_bottle_ids";
 const MY_BOTTLES_KEY = "bien_xanh_my_bottle_ids";
 
 const WAVE_FRAME_DURATION_MS = 2000;
-const BIRD_FRAME_DURATION_MS = 280;
+const BIRD_FRAME_DURATION_MS = 550;
 
 function getIdList(key) {
   try {
@@ -294,7 +294,7 @@ export default function App() {
             transform: translate(0px, 0px);
           }
           50% {
-            transform: translate(12px, -6px);
+            transform: translate(6px, -4px);
           }
         }
         .sky-birds-layer {
@@ -305,7 +305,7 @@ export default function App() {
           aspect-ratio: 1 / 1;
           pointer-events: none;
           overflow: hidden;
-          animation: flockDrift 7s ease-in-out infinite;
+          animation: flockDrift 14s ease-in-out infinite;
           z-index: 6;
         }
         @keyframes bottleFloat {

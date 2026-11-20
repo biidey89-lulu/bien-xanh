@@ -364,8 +364,7 @@ export default function App() {
             style={{
               position: "absolute",
               bottom: "18px",
-              left: "50%",
-              transform: "translateX(-50%)",
+              right: "14px",
               background: "transparent",
               border: "none",
               padding: 0,

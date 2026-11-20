@@ -38,10 +38,11 @@ const BIRD_FRAME_DURATION_MS = 550;
 const CLOUD_MOVE_DURATION_MS = 87000;
 const CLOUD_CYCLE_MS = 88800;
 
-// Cấu hình thời gian xuất hiện / chìm của chai đọc thư
+// Cấu hình thời gian xuất hiện / chìm của chai đọc thư và tự đóng thư
 const BOTTLE_INITIAL_DELAY_MS = 5000; // Vào bãi biển 5s thì chai xuất hiện
 const BOTTLE_VISIBLE_DURATION_MS = 15000; // Không vớt thì 15s sau chìm đi
 const BOTTLE_RESPAWN_DELAY_MS = 30000; // Ẩn/chìm xong thì 30s sau hiện lại
+const READ_AUTO_CLOSE_MS = 180000; // Mở thư đọc không bấm đóng thì sau 180s tự đóng
 
 function getIdList(key) {
   try {
@@ -179,7 +180,20 @@ export default function App() {
     };
   }, [scheduleHiddenThenAppear, clearBottleTimer]);
 
-  // Khi người đọc bấm đóng thư (modalMode chuyển từ "read" sang null): chờ 30s mới hiện lại chai
+  // Tự đóng thư sau 180s nếu đang mở modal đọc thư mà không bấm đóng
+  useEffect(() => {
+    if (modalMode !== "read") return;
+
+    const autoCloseTimer = setTimeout(() => {
+      setModalMode(null);
+    }, READ_AUTO_CLOSE_MS);
+
+    return () => {
+      clearTimeout(autoCloseTimer);
+    };
+  }, [modalMode]);
+
+  // Khi khung đọc thư đóng (dù tự đóng sau 180s hay bấm đóng): chờ 30s mới hiện lại chai
   useEffect(() => {
     const wasReading = prevModalModeRef.current === "read";
     prevModalModeRef.current = modalMode;

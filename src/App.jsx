@@ -150,7 +150,7 @@ export default function App() {
     setContent("");
     setNickname("");
     setModalMode(null);
-    alert("🌊 Chiếc chai của bạn đã được thả trôi ra biển!");
+    alert(" Chiếc chai của bạn đã được thả trôi ra biển!");
   };
 
   const handleOpenMyBottles = async () => {
@@ -319,7 +319,7 @@ export default function App() {
               zIndex: 20,
             }}
           >
-            📜 Thư tôi thả
+            📜 Thư của tôi
           </button>
 
           <button
@@ -485,7 +485,7 @@ export default function App() {
 
           <div className="read-sheet" onClick={(e) => e.stopPropagation()}>
             <h3 className="read-title">
-              ✉️ Thư từ {currentBottle?.nickname || "một người lạ"}
+               Thư từ {currentBottle?.nickname || "một người lạ"}
             </h3>
             {loading ? (
               <p className="read-body" style={{ textAlign: "center" }}>
@@ -691,7 +691,7 @@ export default function App() {
 
             <input
               type="text"
-              placeholder="Biệt danh (bỏ trống để ẩn danh)"
+              placeholder="Thư từ: (bỏ trống để ẩn danh)"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               className="write-input"
@@ -701,7 +701,7 @@ export default function App() {
               rows={4}
               maxLength={500}
               required
-              placeholder="Viết điều bạn muốn gửi ra biển (tối đa 500 ký tự)..."
+              placeholder=" Gửi tâm tư ra biển (tối đa 500 ký tự)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="write-textarea"

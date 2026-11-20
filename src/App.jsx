@@ -473,16 +473,84 @@ export default function App() {
               min-height: 460px;
               max-height: 92dvh;
               overflow-y: auto;
-              padding: 96px 76px 86px 76px;
+              padding: 112px 92px 104px 92px;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
+            }
+            .write-title {
+              margin: 0;
+              font-size: 15px;
+              color: #0f3460;
+              font-weight: 700;
+            }
+            .write-close-btn {
+              width: 24px;
+              height: 24px;
+              border-radius: 999px;
+              border: 1px solid rgba(59, 40, 24, 0.28);
+              background-color: transparent;
+              color: #3b2818;
+              font-size: 12.5px;
+              line-height: 1;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+            }
+            .write-input {
+              width: 100%;
+              padding: 6px 9px;
+              margin-bottom: 7px;
+              border-radius: 7px;
+              border: 1px solid rgba(59, 40, 24, 0.28);
+              background-color: transparent;
+              color: #2b1d12;
+              font-size: 12px;
+              outline: none;
+              box-sizing: border-box;
+            }
+            .write-textarea {
+              width: 100%;
+              padding: 7px 9px;
+              border-radius: 8px;
+              border: 1px solid rgba(59, 40, 24, 0.28);
+              background-color: transparent;
+              color: #2b1d12;
+              font-size: 12px;
+              line-height: 1.42;
+              resize: none;
+              min-height: 76px;
+              outline: none;
+              box-sizing: border-box;
+            }
+            .write-counter {
+              font-size: 11px;
+              color: #5c4632;
+              text-align: right;
+              margin-top: 4px;
+              margin-bottom: 6px;
+            }
+            .write-submit-btn {
+              padding: 6px 13px;
+              border-radius: 999px;
+              border: none;
+              background-color: #0284c7;
+              color: #ffffff;
+              font-size: 12px;
+              font-weight: 700;
+              cursor: pointer;
+            }
+            .write-submit-btn:disabled {
+              background-color: #7dd3fc;
+              cursor: not-allowed;
             }
             @media (max-width: 600px) {
               .write-sheet {
                 max-width: 440px;
                 min-height: 440px;
-                padding: 92px 64px 82px 64px;
+                padding: 104px 72px 96px 72px;
               }
             }
           `}</style>
@@ -498,38 +566,15 @@ export default function App() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: "8px",
-                marginBottom: "10px",
+                marginBottom: "8px",
               }}
             >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "17px",
-                  color: "#0f3460",
-                  fontWeight: 700,
-                }}
-              >
-                Gửi tâm sự vào chai
-              </h3>
+              <h3 className="write-title">Gửi tâm sự vào chai</h3>
               <button
                 type="button"
                 onClick={() => setModalMode(null)}
                 aria-label="Đóng"
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "999px",
-                  border: "1px solid rgba(59, 40, 24, 0.28)",
-                  backgroundColor: "transparent",
-                  color: "#3b2818",
-                  fontSize: "14px",
-                  lineHeight: 1,
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
+                className="write-close-btn"
               >
                 ✕
               </button>
@@ -540,64 +585,30 @@ export default function App() {
               placeholder="Biệt danh (bỏ trống để ẩn danh)"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "8px 11px",
-                marginBottom: "9px",
-                borderRadius: "8px",
-                border: "1px solid rgba(59, 40, 24, 0.28)",
-                backgroundColor: "transparent",
-                color: "#2b1d12",
-                fontSize: "13.5px",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
+              className="write-input"
             />
 
             <textarea
-              rows={4}
+              rows={3}
               maxLength={500}
               required
               placeholder="Viết điều bạn muốn gửi ra biển (tối đa 500 ký tự)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "9px 11px",
-                borderRadius: "10px",
-                border: "1px solid rgba(59, 40, 24, 0.28)",
-                backgroundColor: "transparent",
-                color: "#2b1d12",
-                fontSize: "13.5px",
-                lineHeight: 1.5,
-                resize: "none",
-                minHeight: "105px",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
+              className="write-textarea"
             />
 
-            <div
-              style={{
-                fontSize: "12px",
-                color: "#5c4632",
-                textAlign: "right",
-                marginTop: "5px",
-                marginBottom: "8px",
-              }}
-            >
-              {content.length} / 500
-            </div>
+            <div className="write-counter">{content.length} / 500</div>
 
             {statusMsg && (
               <p
                 style={{
                   color: "#b91c1c",
                   backgroundColor: "transparent",
-                  fontSize: "13px",
+                  fontSize: "11.5px",
                   fontWeight: 600,
                   marginTop: 0,
-                  marginBottom: "8px",
+                  marginBottom: "6px",
                 }}
               >
                 {statusMsg}
@@ -615,16 +626,7 @@ export default function App() {
               <button
                 type="submit"
                 disabled={loading}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "999px",
-                  border: "none",
-                  backgroundColor: loading ? "#7dd3fc" : "#0284c7",
-                  color: "#ffffff",
-                  fontSize: "13.5px",
-                  fontWeight: 700,
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
+                className="write-submit-btn"
               >
                 {loading ? "Đang thả..." : "Thả xuống biển"}
               </button>

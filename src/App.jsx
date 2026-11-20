@@ -460,23 +460,24 @@ export default function App() {
             .read-close-btn:hover {
               transform: scale(1.04);
             }
+            /* Trong modalMode === "read" */
             .read-close-img {
-              width: 142px;
+              width: 108px;
               height: auto;
               display: block;
             }
             @media (max-width: 600px) {
               .read-sheet {
                 max-width: 440px;
-                min-height: 440px;
-                padding: 66px 66px 118px 66px;
+                min-height: 420px;
+                padding: 66px 66px 104px 66px;
               }
               .read-close-btn {
                 bottom: 24px;
                 right: 28px;
               }
               .read-close-img {
-                width: 126px;
+                width: 94px;
               }
             }
           `}</style>
@@ -644,8 +645,9 @@ export default function App() {
               cursor: not-allowed;
               transform: none;
             }
+            /* Trong modalMode === "write" */
             .write-submit-img {
-              width: 142px;
+              width: 108px;
               height: auto;
               display: block;
             }
@@ -653,7 +655,7 @@ export default function App() {
               .write-sheet {
                 max-width: 440px;
                 min-height: 440px;
-                padding: 64px 66px 118px 66px;
+                padding: 64px 66px 106px 66px;
               }
               .write-close-btn {
                 top: 52px;
@@ -664,7 +666,7 @@ export default function App() {
                 right: 28px;
               }
               .write-submit-img {
-                width: 126px;
+                width: 94px;
               }
             }
           `}</style>

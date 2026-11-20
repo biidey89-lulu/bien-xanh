@@ -121,6 +121,42 @@ function formatCountdown(msRemaining) {
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
+function SpeakerIcon({ muted }) {
+  return muted ? (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <line x1="23" y1="9" x2="17" y2="15" />
+      <line x1="17" y1="9" x2="23" y2="15" />
+    </svg>
+  ) : (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    </svg>
+  );
+}
+
 export default function ShellGameModal({ onClose }) {
   const [isMuted, setIsMuted] = useState(() => getInitialMuted());
   const [unlockedLevel, setUnlockedLevel] = useState(() => getUnlockedLevel());
@@ -456,31 +492,33 @@ export default function ShellGameModal({ onClose }) {
           flex-wrap: wrap;
         }
         .shell-hint-btn {
-          padding: 6px 9px;
+          padding: 6px 8px;
           border-radius: 10px;
           border: 1px solid #f59e0b;
           background-color: #fef3c7;
           color: #78350f;
           font-weight: 700;
-          font-size: 12px;
+          font-size: 11.5px;
           cursor: pointer;
           display: inline-flex;
           align-items: center;
           gap: 4px;
+          white-space: nowrap;
         }
         .shell-hint-btn:disabled {
           opacity: 0.55;
           cursor: not-allowed;
         }
         .shell-level-picker-btn {
-          padding: 6px 9px;
+          padding: 6px 8px;
           border-radius: 10px;
           border: 1px solid #bae6fd;
           background-color: #e0f2fe;
           color: #0369a1;
           font-weight: 700;
-          font-size: 12px;
+          font-size: 11.5px;
           cursor: pointer;
+          white-space: nowrap;
         }
         .shell-level-picker-btn.active {
           background-color: #0284c7;
@@ -496,11 +534,13 @@ export default function ShellGameModal({ onClose }) {
           color: #0f3460;
           font-weight: 800;
           font-size: 13px;
+          line-height: 1;
           cursor: pointer;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          padding: 0;
         }
         .shell-icon-circle-btn.active {
           background-color: #0284c7;
@@ -583,24 +623,32 @@ export default function ShellGameModal({ onClose }) {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          padding: 0;
         }
         .shell-stats-bar {
           position: absolute;
           left: 7%;
           right: 7%;
-          bottom: 2.2%;
+          bottom: 1.6%;
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 6px;
-          background-color: rgba(254, 243, 199, 0.88);
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 4px;
+          background-color: rgba(254, 243, 199, 0.9);
           backdrop-filter: blur(4px);
           border: 1px solid rgba(245, 158, 11, 0.55);
-          border-radius: 12px;
-          padding: 7px 8px;
+          border-radius: 11px;
+          padding: 6px 6px;
           text-align: center;
-          font-size: 12px;
+          font-size: 11px;
+          line-height: 1.25;
           box-shadow: 0 4px 12px rgba(15, 52, 96, 0.22);
           z-index: 8;
+        }
+        .shell-stat-label {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          color: #4b382a;
         }
         .shell-board-wrap {
           position: relative;
@@ -618,7 +666,7 @@ export default function ShellGameModal({ onClose }) {
           left: 7%;
           right: 7%;
           top: 6%;
-          bottom: 15.3%;
+          bottom: 14.8%;
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
           grid-template-rows: repeat(8, minmax(0, 1fr));
@@ -764,12 +812,13 @@ export default function ShellGameModal({ onClose }) {
           z-index: 15;
         }
         .shell-action-btn {
-          padding: 6px 10px;
+          padding: 6px 9px;
           border-radius: 10px;
           border: none;
           font-weight: 700;
-          font-size: 12px;
+          font-size: 11.5px;
           cursor: pointer;
+          white-space: nowrap;
         }
       `}</style>
 
@@ -792,7 +841,7 @@ export default function ShellGameModal({ onClose }) {
               💡 {hintState.points}/{MAX_HINT_POINTS}
             </span>
             {!isHintFull && (
-              <span style={{ fontSize: "11px", opacity: 0.85 }}>
+              <span style={{ fontSize: "10.5px", opacity: 0.85 }}>
                 ({hintCountdownText})
               </span>
             )}
@@ -827,7 +876,7 @@ export default function ShellGameModal({ onClose }) {
               isMuted ? "Đang tắt âm (bấm để bật)" : "Đang bật âm (bấm để tắt)"
             }
           >
-            {isMuted ? "🔇" : "🔊"}
+            <SpeakerIcon muted={isMuted} />
           </button>
           <button
             type="button"
@@ -894,17 +943,17 @@ export default function ShellGameModal({ onClose }) {
 
           <div className="shell-stats-bar">
             <div>
-              <div>Level {currentLevelNum}</div>
+              <div className="shell-stat-label">Level {currentLevelNum}</div>
               <strong>{levelConfig.shellCount} loại vỏ</strong>
             </div>
             <div>
-              <div>Điểm / Mục tiêu</div>
+              <div className="shell-stat-label">Điểm / Mục tiêu</div>
               <strong>
                 {score} / {levelConfig.targetScore}
               </strong>
             </div>
             <div>
-              <div>Lượt còn lại</div>
+              <div className="shell-stat-label">Lượt còn lại</div>
               <strong>{movesLeft}</strong>
             </div>
           </div>

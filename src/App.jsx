@@ -216,7 +216,7 @@ export default function App() {
         .wave-overlay {
           position: absolute;
           left: -3%;
-          top: 35%;
+          top: 42%;
           width: 80%;
           height: 60%;
           pointer-events: none;

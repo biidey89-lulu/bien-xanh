@@ -4,6 +4,7 @@ import beachBg from "./assets/beach-bg.png";
 import bottleImg from "./assets/bottle.png";
 import letterImg from "./assets/letter.png";
 import writePanelImg from "./assets/write-panel.png";
+import dropImg from "./assets/drop.png";
 import wave1 from "./assets/wave-1.png";
 import wave2 from "./assets/wave-2.png";
 import wave3 from "./assets/wave-3.png";
@@ -536,19 +537,19 @@ export default function App() {
             }
             .write-submit-btn {
               position: absolute;
-              bottom: 62px;
-              right: 68px;
-              padding: 7px 15px;
-              border-radius: 999px;
+              bottom: 54px;
+              right: 64px;
+              padding: 0;
               border: none;
-              background-color: #0284c7;
-              color: #ffffff;
-              font-size: 12.5px;
-              font-weight: 700;
+              background: transparent;
               cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              transition: opacity 0.2s ease, transform 0.15s ease;
             }
             .write-submit-btn:disabled {
-              background-color: #7dd3fc;
+              opacity: 0.55;
               cursor: not-allowed;
             }
             @media (max-width: 600px) {
@@ -562,8 +563,8 @@ export default function App() {
                 right: 54px;
               }
               .write-submit-btn {
-                bottom: 58px;
-                right: 54px;
+                bottom: 50px;
+                right: 50px;
               }
             }
           `}</style>
@@ -622,9 +623,19 @@ export default function App() {
             <button
               type="submit"
               disabled={loading}
+              aria-label="Thả xuống biển"
+              title="Thả xuống biển"
               className="write-submit-btn"
             >
-              {loading ? "Đang thả..." : "Thả xuống biển"}
+              <img
+                src={dropImg}
+                alt="Thả xuống biển"
+                style={{
+                  width: "110px",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
             </button>
           </form>
         </div>

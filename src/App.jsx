@@ -450,7 +450,7 @@ export default function App() {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(9, 30, 58, 0.52)",
+            backgroundColor: "rgba(9, 30, 58, 0.45)",
             backdropFilter: "blur(3px)",
             display: "flex",
             alignItems: "center",
@@ -469,14 +469,12 @@ export default function App() {
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
               backgroundColor: "transparent",
-              color: "#1e293b",
+              color: "#3b2818",
               maxWidth: "420px",
               width: "100%",
-              maxHeight: "86vh",
+              maxHeight: "88vh",
               overflowY: "auto",
-              borderRadius: "20px",
-              padding: "24px 22px",
-              boxShadow: "0 18px 42px rgba(9, 30, 58, 0.28)",
+              padding: "56px 46px 50px 46px",
               boxSizing: "border-box",
             }}
           >
@@ -486,13 +484,13 @@ export default function App() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: "8px",
-                marginBottom: "14px",
+                marginBottom: "12px",
               }}
             >
               <h3
                 style={{
                   margin: 0,
-                  fontSize: "19px",
+                  fontSize: "17px",
                   color: "#0f3460",
                   fontWeight: 700,
                 }}
@@ -504,18 +502,19 @@ export default function App() {
                 onClick={() => setModalMode(null)}
                 aria-label="Đóng"
                 style={{
-                  width: "30px",
-                  height: "30px",
+                  width: "28px",
+                  height: "28px",
                   borderRadius: "999px",
-                  border: "none",
-                  backgroundColor: "rgba(15, 52, 96, 0.08)",
-                  color: "#475569",
-                  fontSize: "15px",
+                  border: "1px solid rgba(59, 40, 24, 0.25)",
+                  backgroundColor: "transparent",
+                  color: "#3b2818",
+                  fontSize: "14px",
                   lineHeight: 1,
                   cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
                 ✕
@@ -529,13 +528,13 @@ export default function App() {
               onChange={(e) => setNickname(e.target.value)}
               style={{
                 width: "100%",
-                padding: "11px 13px",
-                marginBottom: "12px",
-                borderRadius: "12px",
-                border: "1px solid #cbd5e1",
-                backgroundColor: "#ffffff",
-                color: "#1e293b",
-                fontSize: "14.5px",
+                padding: "8px 10px",
+                marginBottom: "10px",
+                borderRadius: "8px",
+                border: "1px solid rgba(59, 40, 24, 0.28)",
+                backgroundColor: "transparent",
+                color: "#2b1d12",
+                fontSize: "14px",
                 outline: "none",
                 boxSizing: "border-box",
               }}
@@ -550,15 +549,15 @@ export default function App() {
               onChange={(e) => setContent(e.target.value)}
               style={{
                 width: "100%",
-                padding: "12px 13px",
-                borderRadius: "12px",
-                border: "1px solid #cbd5e1",
-                backgroundColor: "#ffffff",
-                color: "#1e293b",
-                fontSize: "14.5px",
+                padding: "10px",
+                borderRadius: "10px",
+                border: "1px solid rgba(59, 40, 24, 0.28)",
+                backgroundColor: "transparent",
+                color: "#2b1d12",
+                fontSize: "14px",
                 lineHeight: 1.55,
-                resize: "vertical",
-                minHeight: "110px",
+                resize: "none",
+                minHeight: "120px",
                 outline: "none",
                 boxSizing: "border-box",
               }}
@@ -567,10 +566,10 @@ export default function App() {
             <div
               style={{
                 fontSize: "12px",
-                color: "#64748b",
+                color: "#5c4632",
                 textAlign: "right",
-                marginTop: "6px",
-                marginBottom: "14px",
+                marginTop: "4px",
+                marginBottom: "12px",
               }}
             >
               {content.length} / 500
@@ -579,14 +578,12 @@ export default function App() {
             {statusMsg && (
               <p
                 style={{
-                  color: "#dc2626",
-                  backgroundColor: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  borderRadius: "10px",
-                  padding: "8px 12px",
-                  fontSize: "13.5px",
+                  color: "#b91c1c",
+                  backgroundColor: "transparent",
+                  fontSize: "13px",
+                  fontWeight: 600,
                   marginTop: 0,
-                  marginBottom: "12px",
+                  marginBottom: "10px",
                 }}
               >
                 {statusMsg}
@@ -596,7 +593,7 @@ export default function App() {
             <div
               style={{
                 display: "flex",
-                gap: "10px",
+                gap: "8px",
                 justifyContent: "flex-end",
                 alignItems: "center",
               }}
@@ -605,12 +602,12 @@ export default function App() {
                 type="button"
                 onClick={() => setModalMode(null)}
                 style={{
-                  padding: "10px 16px",
+                  padding: "8px 14px",
                   borderRadius: "999px",
-                  border: "1px solid #cbd5e1",
-                  backgroundColor: "#f8fafc",
-                  color: "#334155",
-                  fontSize: "14px",
+                  border: "1px solid rgba(59, 40, 24, 0.32)",
+                  backgroundColor: "transparent",
+                  color: "#3b2818",
+                  fontSize: "13.5px",
                   fontWeight: 600,
                   cursor: "pointer",
                 }}
@@ -621,15 +618,14 @@ export default function App() {
                 type="submit"
                 disabled={loading}
                 style={{
-                  padding: "10px 20px",
+                  padding: "8px 16px",
                   borderRadius: "999px",
                   border: "none",
                   backgroundColor: loading ? "#7dd3fc" : "#0284c7",
                   color: "#ffffff",
-                  fontSize: "14px",
+                  fontSize: "13.5px",
                   fontWeight: 700,
                   cursor: loading ? "not-allowed" : "pointer",
-                  boxShadow: "0 6px 16px rgba(2, 132, 199, 0.3)",
                 }}
               >
                 {loading ? "Đang thả..." : "Thả xuống biển"}

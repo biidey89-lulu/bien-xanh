@@ -179,7 +179,7 @@ export default function App() {
       style={{
         position: "relative",
         width: "100%",
-        height: "100vh",
+        height: "100dvh",
         overflow: "hidden",
         backgroundColor: "#0b2545",
       }}
@@ -191,6 +191,37 @@ export default function App() {
           width: 100%;
           height: 100%;
           overflow: hidden;
+        }
+        .scene-frame {
+          position: relative;
+          width: 100%;
+          max-width: 56.25dvh;
+          height: 100%;
+          max-height: 100dvh;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        }
+        @media (max-aspect-ratio: 9/16) {
+          .scene-frame {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 100dvh;
+            aspect-ratio: 9 / 16;
+          }
+        }
+        .wave-overlay {
+          position: absolute;
+          left: -1%;
+          top: 38%;
+          width: 102%;
+          height: 60%;
+          pointer-events: none;
+          overflow: hidden;
+          z-index: 5;
         }
         @keyframes bottleFloat {
           0%, 100% {
@@ -234,45 +265,23 @@ export default function App() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          overflow: "hidden",
           zIndex: 2,
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            height: "100%",
-            maxWidth: "100%",
-            aspectRatio: "9 / 16",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div className="scene-frame">
           <img
             src={beachBg}
             alt="Bãi biển"
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "contain",
+              objectFit: "cover",
               display: "block",
-              boxShadow: "0 12px 40px rgba(0, 0, 0, 0.35)",
             }}
           />
 
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              left: "-2%",
-              top: "36.5%",
-              width: "106%",
-              height: "82%",
-              pointerEvents: "none",
-              overflow: "hidden",
-              zIndex: 5,
-            }}
-          >
+          <div aria-hidden="true" className="wave-overlay">
             {waveFrames.map((frameSrc, idx) => (
               <img
                 key={idx}

@@ -16,6 +16,10 @@ import bird2 from "./assets/bird-2.png";
 import bird3 from "./assets/bird-3.png";
 import bird4 from "./assets/bird-4.png";
 import bird5 from "./assets/bird-5.png";
+import cloud1 from "./assets/cloud-1.png";
+import cloud2 from "./assets/cloud-2.png";
+import cloud3 from "./assets/cloud-3.png";
+import cloud4 from "./assets/cloud-4.png";
 import ambientSeaAudio from "./assets/ambient-sea.mp3";
 
 const supabase = createClient(
@@ -28,6 +32,7 @@ const MY_BOTTLES_KEY = "bien_xanh_my_bottle_ids";
 
 const WAVE_FRAME_DURATION_MS = 2000;
 const BIRD_FRAME_DURATION_MS = 550;
+const CLOUD_FRAME_DURATION_MS = 2200;
 
 function getIdList(key) {
   try {
@@ -67,6 +72,9 @@ export default function App() {
   const birdFrames = [bird1, bird2, bird3, bird4, bird5];
   const [activeBirdIndex, setActiveBirdIndex] = useState(0);
 
+  const cloudFrames = [cloud1, cloud2, cloud3, cloud4];
+  const [activeCloudIndex, setActiveCloudIndex] = useState(0);
+
   useEffect(() => {
     if (waveFrames.length <= 1) return;
     const timer = setInterval(() => {
@@ -82,6 +90,14 @@ export default function App() {
     }, BIRD_FRAME_DURATION_MS);
     return () => clearInterval(timer);
   }, [birdFrames.length]);
+
+  useEffect(() => {
+    if (cloudFrames.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveCloudIndex((prev) => (prev + 1) % cloudFrames.length);
+    }, CLOUD_FRAME_DURATION_MS);
+    return () => clearInterval(timer);
+  }, [cloudFrames.length]);
 
   useEffect(() => {
     const audio = new Audio(ambientSeaAudio);
@@ -279,6 +295,25 @@ export default function App() {
             aspect-ratio: 9 / 16;
           }
         }
+        @keyframes cloudDrift {
+          0%, 100% {
+            transform: translateX(-8px);
+          }
+          50% {
+            transform: translateX(10px);
+          }
+        }
+        .sky-clouds-layer {
+          position: absolute;
+          left: 0%;
+          top: 2%;
+          width: 100%;
+          height: 36%;
+          pointer-events: none;
+          overflow: hidden;
+          animation: cloudDrift 18s ease-in-out infinite;
+          z-index: 4;
+        }
         .wave-overlay {
           position: absolute;
           left: -6%;
@@ -361,6 +396,25 @@ export default function App() {
               display: "block",
             }}
           />
+
+          <div aria-hidden="true" className="sky-clouds-layer">
+            {cloudFrames.map((frameSrc, idx) => (
+              <img
+                key={idx}
+                src={frameSrc}
+                alt=""
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  opacity: idx === activeCloudIndex ? 0.92 : 0,
+                  transition: "opacity 0.9s ease-in-out",
+                }}
+              />
+            ))}
+          </div>
 
           <div aria-hidden="true" className="wave-overlay">
             {waveFrames.map((frameSrc, idx) => (

@@ -474,71 +474,15 @@ export default function App() {
               min-height: 460px;
               max-height: 92dvh;
               overflow-y: auto;
-              padding: 68px 84px 104px 84px;
+              padding: 68px 84px 126px 84px;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
             }
-            .write-title {
-              margin: 0 0 12px 0;
-              text-align: center;
-              font-size: 16px;
-              color: #0f3460;
-              font-weight: 700;
-            }
-            .write-close-btn {
-              position: absolute;
-              top: 56px;
-              right: 68px;
-              width: 26px;
-              height: 26px;
-              border-radius: 999px;
-              border: 1px solid rgba(59, 40, 24, 0.28);
-              background-color: transparent;
-              color: #3b2818;
-              font-size: 13px;
-              line-height: 1;
-              cursor: pointer;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .write-input {
-              width: 100%;
-              padding: 7px 10px;
-              margin-bottom: 8px;
-              border-radius: 7px;
-              border: 1px solid rgba(59, 40, 24, 0.28);
-              background-color: transparent;
-              color: #2b1d12;
-              font-size: 12.5px;
-              outline: none;
-              box-sizing: border-box;
-            }
-            .write-textarea {
-              width: 100%;
-              padding: 8px 10px;
-              border-radius: 8px;
-              border: 1px solid rgba(59, 40, 24, 0.28);
-              background-color: transparent;
-              color: #2b1d12;
-              font-size: 12.5px;
-              line-height: 1.45;
-              resize: none;
-              min-height: 110px;
-              outline: none;
-              box-sizing: border-box;
-            }
-            .write-counter {
-              font-size: 11px;
-              color: #5c4632;
-              text-align: right;
-              margin-top: 4px;
-            }
             .write-submit-btn {
               position: absolute;
-              bottom: 54px;
-              right: 64px;
+              bottom: 26px;
+              right: 34px;
               padding: 0;
               border: none;
               background: transparent;
@@ -548,23 +492,35 @@ export default function App() {
               justify-content: center;
               transition: opacity 0.2s ease, transform 0.15s ease;
             }
+            .write-submit-btn:hover {
+              transform: scale(1.04);
+            }
             .write-submit-btn:disabled {
               opacity: 0.55;
               cursor: not-allowed;
+              transform: none;
+            }
+            .write-submit-img {
+              width: 142px;
+              height: auto;
+              display: block;
             }
             @media (max-width: 600px) {
               .write-sheet {
                 max-width: 440px;
                 min-height: 440px;
-                padding: 64px 66px 96px 66px;
+                padding: 64px 66px 118px 66px;
               }
               .write-close-btn {
                 top: 52px;
                 right: 54px;
               }
               .write-submit-btn {
-                bottom: 50px;
-                right: 50px;
+                bottom: 24px;
+                right: 28px;
+              }
+              .write-submit-img {
+                width: 126px;
               }
             }
           `}</style>
@@ -630,11 +586,7 @@ export default function App() {
               <img
                 src={dropImg}
                 alt="Thả xuống biển"
-                style={{
-                  width: "110px",
-                  height: "auto",
-                  display: "block",
-                }}
+                className="write-submit-img"
               />
             </button>
           </form>

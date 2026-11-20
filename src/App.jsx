@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import beachBg from "./assets/beach-bg.png";
 import bottleImg from "./assets/bottle.png";
@@ -110,6 +110,80 @@ function createRandomCloudFlock(frameCount) {
   });
 }
 
+class GameErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div
+          onClick={this.props.onClose}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(9, 30, 58, 0.75)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+            zIndex: 40,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "#fffdf7",
+              color: "#1f2937",
+              maxWidth: "380px",
+              width: "100%",
+              borderRadius: "16px",
+              padding: "20px",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.4)",
+            }}
+          >
+            <h3 style={{ marginTop: 0, color: "#b91c1c" }}>
+              Lỗi mở mini game Vỏ sò
+            </h3>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "#334155",
+                wordBreak: "break-word",
+              }}
+            >
+              {this.state.error?.message || "Không xác định được lỗi."}
+            </p>
+            <button
+              type="button"
+              onClick={this.props.onClose}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "8px",
+                border: "none",
+                backgroundColor: "#0284c7",
+                color: "#fff",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [modalMode, setModalMode] = useState(null);
   const [currentBottle, setCurrentBottle] = useState(null);
@@ -210,7 +284,9 @@ export default function App() {
     document.head.appendChild(fontLink);
 
     return () => {
-      document.head.removeChild(fontLink);
+      if (fontLink.parentNode) {
+        fontLink.parentNode.removeChild(fontLink);
+      }
     };
   }, []);
 
@@ -233,48 +309,40 @@ export default function App() {
   useEffect(() => {
     if (CLOUD_FRAMES.length <= 1) return;
 
-    const pendingTimers = new Set();
-    const schedule = (fn, delay) => {
-      const id = setTimeout(() => {
-        pendingTimers.delete(id);
-        fn();
-      }, delay);
-      pendingTimers.add(id);
-      return id;
-    };
+    let cancelled = false;
+    let timerId = null;
 
     const runCycle = () => {
-      pendingTimers.forEach((id) => clearTimeout(id));
-      pendingTimers.clear();
+      if (cancelled) return;
 
       setCloudDrifting(false);
       setCloudVisible(true);
 
-      schedule(() => {
+      timerId = setTimeout(() => {
+        if (cancelled) return;
         setCloudDrifting(true);
+
+        timerId = setTimeout(() => {
+          if (cancelled) return;
+          setCloudVisible(false);
+
+          timerId = setTimeout(() => {
+            if (cancelled) return;
+            setCloudFlock(createRandomCloudFlock(CLOUD_FRAMES.length));
+            setCloudDrifting(false);
+            setCloudVisible(true);
+
+            timerId = setTimeout(runCycle, 500);
+          }, Math.max(0, CLOUD_CYCLE_MS - 500 - CLOUD_MOVE_DURATION_MS));
+        }, Math.max(0, CLOUD_MOVE_DURATION_MS - 150));
       }, 150);
-
-      schedule(() => {
-        setCloudVisible(false);
-      }, CLOUD_MOVE_DURATION_MS);
-
-      schedule(() => {
-        setCloudFlock(createRandomCloudFlock(CLOUD_FRAMES.length));
-        setCloudDrifting(false);
-        setCloudVisible(true);
-      }, CLOUD_CYCLE_MS - 500);
     };
 
     runCycle();
 
-    const interval = setInterval(() => {
-      runCycle();
-    }, CLOUD_CYCLE_MS);
-
     return () => {
-      clearInterval(interval);
-      pendingTimers.forEach((id) => clearTimeout(id));
-      pendingTimers.clear();
+      cancelled = true;
+      if (timerId) clearTimeout(timerId);
     };
   }, []);
 
@@ -802,7 +870,9 @@ export default function App() {
       </div>
 
       {modalMode === "minigame" && (
-        <ShellGameModal onClose={() => setModalMode(null)} />
+        <GameErrorBoundary onClose={() => setModalMode(null)}>
+          <ShellGameModal onClose={() => setModalMode(null)} />
+        </GameErrorBoundary>
       )}
 
       {modalMode === "extra" && (
@@ -969,11 +1039,7 @@ export default function App() {
               title="Đóng thư"
               className="read-close-btn"
             >
-              <img
-                src={dropImg}
-                alt="Đóng thư"
-                className="read-close-img"
-              />
+              <img src={dropImg} alt="Đóng thư" className="read-close-img" />
             </button>
           </div>
         </div>
@@ -1109,13 +1175,8 @@ export default function App() {
               transition: opacity 0.2s ease, transform 0.15s ease;
               z-index: 5;
             }
-            .write-submit-btn:hover {
+            .write-submit-btn:hover:not(:disabled) {
               transform: translateX(-50%) scale(1.04);
-            }
-            .write-submit-btn:disabled {
-              opacity: 0.55;
-              cursor: not-allowed;
-              transform: translateX(-50%);
             }
             .write-submit-img {
               width: 108px;
@@ -1125,8 +1186,8 @@ export default function App() {
             @media (max-width: 600px) {
               .write-sheet {
                 max-width: 440px;
-                min-height: 440px;
-                padding: 64px 66px 106px 66px;
+                min-height: 420px;
+                padding: 64px 66px 104px 66px;
               }
               .write-close-btn {
                 top: 52px;
@@ -1134,8 +1195,6 @@ export default function App() {
               }
               .write-submit-btn {
                 bottom: 22px;
-                left: 50%;
-                transform: translateX(-50%);
               }
               .write-submit-img {
                 width: 94px;
@@ -1145,49 +1204,48 @@ export default function App() {
 
           <form
             className="write-sheet"
-            onClick={(e) => e.stopPropagation()}
             onSubmit={handleDropBottle}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
-              onClick={() => setModalMode(null)}
-              aria-label="Đóng"
+              onClick={() => !loading && setModalMode(null)}
+              aria-label="Đóng khung viết thư"
               className="write-close-btn"
             >
               ✕
             </button>
 
-            <h3 className="write-title">Gửi tâm sự vào chai</h3>
+            <h3 className="write-title">Viết thư thả vào chai</h3>
 
             <input
               type="text"
-              placeholder="Thư từ: (bỏ trống để ẩn danh)"
+              maxLength={40}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
+              placeholder="Biệt danh (không bắt buộc)"
               className="write-input"
             />
 
             <textarea
-              rows={4}
+              rows={5}
               maxLength={500}
               required
-              placeholder="Gửi tâm tư ra biển (tối đa 500 ký tự)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              placeholder="Gửi vài dòng tâm sự ra biển khơi..."
               className="write-textarea"
             />
 
-            <div className="write-counter">{content.length} / 500</div>
+            <div className="write-counter">{content.length}/500</div>
 
             {statusMsg && (
               <p
                 style={{
+                  margin: "6px 0 0 0",
+                  fontSize: "12px",
                   color: "#b91c1c",
-                  backgroundColor: "transparent",
-                  fontSize: "11.5px",
-                  fontWeight: 600,
-                  marginTop: "4px",
-                  marginBottom: 0,
+                  textAlign: "center",
                 }}
               >
                 {statusMsg}
@@ -1196,16 +1254,13 @@ export default function App() {
 
             <button
               type="submit"
-              disabled={loading}
-              aria-label="Thả xuống biển"
-              title="Thả xuống biển"
+              disabled={loading || !content.trim()}
+              aria-label="Thả chai"
+              title="Thả chai"
               className="write-submit-btn"
+              style={{ opacity: loading || !content.trim() ? 0.55 : 1 }}
             >
-              <img
-                src={dropImg}
-                alt="Thả xuống biển"
-                className="write-submit-img"
-              />
+              <img src={dropImg} alt="Thả chai" className="write-submit-img" />
             </button>
           </form>
         </div>
@@ -1213,38 +1268,69 @@ export default function App() {
 
       {modalMode === "mine" && (
         <div
+          onClick={() => !loading && setModalMode(null)}
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backgroundColor: "rgba(9, 30, 58, 0.5)",
+            backdropFilter: "blur(3px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "16px",
+            padding: "12px",
             zIndex: 30,
           }}
         >
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: "#fffdf7",
-              color: "#1f2937",
-              maxWidth: "440px",
+              color: "#2b1d12",
               width: "100%",
-              maxHeight: "82vh",
+              maxWidth: "460px",
+              maxHeight: "82dvh",
               overflowY: "auto",
-              borderRadius: "16px",
-              padding: "20px",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+              borderRadius: "18px",
+              padding: "18px",
               boxSizing: "border-box",
+              boxShadow: "0 14px 36px rgba(0, 0, 0, 0.35)",
             }}
           >
-            <h3 style={{ marginTop: 0 }}>📜 Những chiếc chai bạn đã thả</h3>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "12px",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "16px", color: "#0f3460" }}>
+                Thư của tôi
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalMode(null)}
+                style={{
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  backgroundColor: "#0284c7",
+                  color: "#fff",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Đóng
+              </button>
+            </div>
 
             {loading ? (
-              <p>Đang tìm lại thư của bạn...</p>
+              <p style={{ textAlign: "center", color: "#475569" }}>
+                Đang tải danh sách thư...
+              </p>
             ) : myBottles.length === 0 ? (
-              <p style={{ color: "#64748b" }}>
-                Bạn chưa thả chiếc chai nào trên trình duyệt này.
+              <p style={{ textAlign: "center", color: "#64748b" }}>
+                Bạn chưa thả chiếc chai nào trên thiết bị này.
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -1252,53 +1338,38 @@ export default function App() {
                   <div
                     key={item.id}
                     style={{
+                      backgroundColor: "#fef9ec",
+                      border: "1px solid rgba(59, 40, 24, 0.18)",
+                      borderRadius: "12px",
                       padding: "12px",
-                      borderRadius: "10px",
-                      backgroundColor: "#f1f5f9",
-                      border: "1px solid #e2e8f0",
                     }}
                   >
                     <div
                       style={{
                         fontSize: "12px",
-                        color: "#475569",
-                        marginBottom: "6px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "8px",
+                        fontWeight: 700,
+                        color: "#0f3460",
+                        marginBottom: "4px",
                       }}
                     >
-                      <strong>{item.nickname || "Ẩn danh"}</strong>
-                      <span>
-                        {item.created_at
-                          ? new Date(item.created_at).toLocaleString("vi-VN")
-                          : ""}
-                      </span>
+                      {item.nickname || "Ẩn danh"}
                     </div>
-                    <p style={{ margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontFamily: '"Patrick Hand", "Mali", cursive, sans-serif',
+                        fontSize: "15.5px",
+                        lineHeight: 1.5,
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                      }}
+                    >
                       {item.content}
                     </p>
                   </div>
                 ))}
               </div>
             )}
-
-            <div style={{ marginTop: "16px", textAlign: "right" }}>
-              <button
-                type="button"
-                onClick={() => setModalMode(null)}
-                style={{
-                  padding: "9px 18px",
-                  borderRadius: "8px",
-                  border: "none",
-                  backgroundColor: "#0284c7",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Đóng
-              </button>
-            </div>
           </div>
         </div>
       )}

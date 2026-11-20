@@ -61,7 +61,10 @@ export default function ShellGameModal({ onClose }) {
   const [toastText, setToastText] = useState("");
 
   const startLevel = useCallback((lvlNum) => {
-    const cfg = getLevelConfig(lvlNum);
+    const maxAllowed = getUnlockedLevel();
+    const safeLvl = Math.min(10, Math.max(1, Math.min(lvlNum, maxAllowed)));
+    const cfg = getLevelConfig(safeLvl);
+    setUnlockedLevel(maxAllowed);
     setCurrentLevelNum(cfg.level);
     setBoard(createInitialBoard(cfg));
     setScore(0);
@@ -314,19 +317,32 @@ export default function ShellGameModal({ onClose }) {
         </div>
 
         <div className="shell-level-strip">
-          {LEVELS_1_TO_10.map((lvl) => (
-            <button
-              key={lvl.level}
-              type="button"
-              onClick={() => startLevel(lvl.level)}
-              className={`shell-lvl-btn ${
-                lvl.level === currentLevelNum ? "active" : ""
-              }`}
-              title={`Level ${lvl.level} - Mục tiêu ${lvl.targetScore}đ - ${lvl.shellCount} loại vỏ`}
-            >
-              {lvl.level}
-            </button>
-          ))}
+          {LEVELS_1_TO_10.map((lvl) => {
+            const isLocked = lvl.level > unlockedLevel;
+            return (
+              <button
+                key={lvl.level}
+                type="button"
+                disabled={isLocked}
+                onClick={() => startLevel(lvl.level)}
+                className={`shell-lvl-btn ${
+                  lvl.level === currentLevelNum ? "active" : ""
+                }`}
+                style={
+                  isLocked
+                    ? { opacity: 0.45, cursor: "not-allowed" }
+                    : undefined
+                }
+                title={
+                  isLocked
+                    ? `Hoàn thành Level ${lvl.level - 1} để mở khóa`
+                    : `Level ${lvl.level} - Mục tiêu ${lvl.targetScore}đ - ${lvl.shellCount} loại vỏ`
+                }
+              >
+                {isLocked ? "🔒" : lvl.level}
+              </button>
+            );
+          })}
         </div>
 
         <div className="shell-stats-bar">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import beachBg from "./assets/beach-bg.png";
 import bottleImg from "./assets/bottle.png";
@@ -11,6 +11,7 @@ import wave3 from "./assets/wave-3.png";
 import wave4 from "./assets/wave-4.png";
 import wave5 from "./assets/wave-5.png";
 import wave6 from "./assets/wave-6.png";
+import ambientSeaAudio from "./assets/ambient-sea.mp3";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -51,6 +52,9 @@ export default function App() {
   const [myBottles, setMyBottles] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const waveFrames = [wave1, wave2, wave3, wave4, wave5, wave6];
   const [activeWaveIndex, setActiveWaveIndex] = useState(0);
 
@@ -62,11 +66,52 @@ export default function App() {
     return () => clearInterval(timer);
   }, [waveFrames.length]);
 
+  useEffect(() => {
+    const audio = new Audio(ambientSeaAudio);
+    audio.loop = true;
+    audio.volume = 0.28;
+    audioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+    };
+  }, []);
+
+  const ensureMusicPlaying = async () => {
+    const audio = audioRef.current;
+    if (!audio || !audio.paused) return;
+    try {
+      await audio.play();
+      setIsPlaying(true);
+    } catch {
+      setIsPlaying(false);
+    }
+  };
+
+  const toggleMusic = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+    } else {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  };
+
   const [content, setContent] = useState("");
   const [nickname, setNickname] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
 
   const handlePickBottle = async () => {
+    await ensureMusicPlaying();
     setLoading(true);
     setModalMode("read");
     setCurrentBottle(null);
@@ -150,10 +195,11 @@ export default function App() {
     setContent("");
     setNickname("");
     setModalMode(null);
-    alert(" Chiếc chai của bạn đã được thả trôi ra biển!");
+    alert("Chiếc chai của bạn đã được thả trôi ra biển!");
   };
 
   const handleOpenMyBottles = async () => {
+    await ensureMusicPlaying();
     setModalMode("mine");
     setLoading(true);
     setMyBottles([]);
@@ -301,6 +347,31 @@ export default function App() {
 
           <button
             type="button"
+            onClick={toggleMusic}
+            aria-label={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
+            title={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
+            style={{
+              position: "absolute",
+              top: "14px",
+              left: "14px",
+              padding: "8px 12px",
+              borderRadius: "999px",
+              border: "1px solid rgba(15, 52, 96, 0.18)",
+              backgroundColor: "rgba(255, 253, 247, 0.88)",
+              color: "#0f3460",
+              fontSize: "13px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              backdropFilter: "blur(6px)",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.14)",
+              zIndex: 20,
+            }}
+          >
+            {isPlaying ? "🔊 Nhạc" : "🔇 Nhạc"}
+          </button>
+
+          <button
+            type="button"
             onClick={handleOpenMyBottles}
             style={{
               position: "absolute",
@@ -319,7 +390,7 @@ export default function App() {
               zIndex: 20,
             }}
           >
-            📜 Thư của tôi
+            📜 Thư của tôi
           </button>
 
           <button
@@ -357,7 +428,8 @@ export default function App() {
 
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
+              await ensureMusicPlaying();
               setStatusMsg("");
               setModalMode("write");
             }}
@@ -485,7 +557,7 @@ export default function App() {
 
           <div className="read-sheet" onClick={(e) => e.stopPropagation()}>
             <h3 className="read-title">
-               Thư từ {currentBottle?.nickname || "một người lạ"}
+              Thư từ {currentBottle?.nickname || "một người lạ"}
             </h3>
             {loading ? (
               <p className="read-body" style={{ textAlign: "center" }}>
@@ -691,7 +763,7 @@ export default function App() {
 
             <input
               type="text"
-              placeholder="Thư từ: (bỏ trống để ẩn danh)"
+              placeholder="Thư từ: (bỏ trống để ẩn danh)"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               className="write-input"
@@ -701,7 +773,7 @@ export default function App() {
               rows={4}
               maxLength={500}
               required
-              placeholder=" Gửi tâm tư ra biển (tối đa 500 ký tự)..."
+              placeholder="Gửi tâm tư ra biển (tối đa 500 ký tự)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="write-textarea"

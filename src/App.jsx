@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import beachBg from "./assets/beach-bg.png";
 import bottleImg from "./assets/bottle.png";
@@ -37,6 +37,11 @@ const WAVE_FRAME_DURATION_MS = 2000;
 const BIRD_FRAME_DURATION_MS = 550;
 const CLOUD_MOVE_DURATION_MS = 87000;
 const CLOUD_CYCLE_MS = 88800;
+
+// Cấu hình thời gian xuất hiện / chìm của chai đọc thư
+const BOTTLE_INITIAL_DELAY_MS = 5000; // Vào bãi biển 5s thì chai xuất hiện
+const BOTTLE_VISIBLE_DURATION_MS = 15000; // Không vớt thì 15s sau chìm đi
+const BOTTLE_RESPAWN_DELAY_MS = 30000; // Ẩn/chìm xong thì 30s sau hiện lại
 
 function getIdList(key) {
   try {
@@ -106,6 +111,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [extraNote, setExtraNote] = useState("");
 
+  // Quản lý vòng đời xuất hiện / chìm của chai
+  const [bottleVisible, setBottleVisible] = useState(false);
+  const bottleTimerRef = useRef(null);
+  const pickedInCurrentCycleRef = useRef(false);
+  const prevModalModeRef = useRef(null);
+
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -121,6 +132,62 @@ export default function App() {
   );
   const [cloudDrifting, setCloudDrifting] = useState(false);
   const [cloudVisible, setCloudVisible] = useState(true);
+
+  const clearBottleTimer = useCallback(() => {
+    if (bottleTimerRef.current) {
+      clearTimeout(bottleTimerRef.current);
+      bottleTimerRef.current = null;
+    }
+  }, []);
+
+  // Lên lịch: chai nổi lên trong 15s, nếu không vớt thì chìm đi và 30s sau hiện lại
+  const scheduleVisibleThenSinkAndRespawn = useCallback(() => {
+    clearBottleTimer();
+    pickedInCurrentCycleRef.current = false;
+    setBottleVisible(true);
+
+    bottleTimerRef.current = setTimeout(() => {
+      if (pickedInCurrentCycleRef.current) return;
+      setBottleVisible(false);
+
+      bottleTimerRef.current = setTimeout(() => {
+        if (pickedInCurrentCycleRef.current) return;
+        scheduleVisibleThenSinkAndRespawn();
+      }, BOTTLE_RESPAWN_DELAY_MS);
+    }, BOTTLE_VISIBLE_DURATION_MS);
+  }, [clearBottleTimer]);
+
+  // Lên lịch: chai đang ẩn, chờ `delayMs` rồi nổi lên và chạy chu kỳ 15s hiện -> 30s ẩn
+  const scheduleHiddenThenAppear = useCallback(
+    (delayMs) => {
+      clearBottleTimer();
+      pickedInCurrentCycleRef.current = false;
+      setBottleVisible(false);
+
+      bottleTimerRef.current = setTimeout(() => {
+        scheduleVisibleThenSinkAndRespawn();
+      }, delayMs);
+    },
+    [clearBottleTimer, scheduleVisibleThenSinkAndRespawn]
+  );
+
+  // Vào bãi biển: chờ 5s đầu rồi chai xuất hiện
+  useEffect(() => {
+    scheduleHiddenThenAppear(BOTTLE_INITIAL_DELAY_MS);
+    return () => {
+      clearBottleTimer();
+    };
+  }, [scheduleHiddenThenAppear, clearBottleTimer]);
+
+  // Khi người đọc bấm đóng thư (modalMode chuyển từ "read" sang null): chờ 30s mới hiện lại chai
+  useEffect(() => {
+    const wasReading = prevModalModeRef.current === "read";
+    prevModalModeRef.current = modalMode;
+
+    if (wasReading && modalMode === null && pickedInCurrentCycleRef.current) {
+      scheduleHiddenThenAppear(BOTTLE_RESPAWN_DELAY_MS);
+    }
+  }, [modalMode, scheduleHiddenThenAppear]);
 
   useEffect(() => {
     const fontLink = document.createElement("link");
@@ -243,6 +310,13 @@ export default function App() {
   const [statusMsg, setStatusMsg] = useState("");
 
   const handlePickBottle = async () => {
+    if (!bottleVisible) return;
+
+    // Bấm vớt chai: dừng timer tự chìm hiện tại và ẩn chai cho đến khi đóng thư + 30s
+    clearBottleTimer();
+    pickedInCurrentCycleRef.current = true;
+    setBottleVisible(false);
+
     await ensureMusicPlaying();
     setLoading(true);
     setModalMode("read");
@@ -443,6 +517,7 @@ export default function App() {
         }
         .floating-bottle {
           animation: bottleFloat 3.2s ease-in-out infinite;
+          transition: opacity 0.45s ease;
         }
         .bottom-dock {
           position: absolute;
@@ -618,6 +693,8 @@ export default function App() {
             type="button"
             className="floating-bottle"
             onClick={handlePickBottle}
+            disabled={!bottleVisible}
+            aria-hidden={!bottleVisible}
             title="Nhặt chai lên đọc"
             style={{
               position: "absolute",
@@ -631,7 +708,9 @@ export default function App() {
               background: "transparent",
               border: "none",
               padding: 0,
-              cursor: "pointer",
+              cursor: bottleVisible ? "pointer" : "default",
+              opacity: bottleVisible ? 1 : 0,
+              pointerEvents: bottleVisible ? "auto" : "none",
               zIndex: 15,
             }}
           >

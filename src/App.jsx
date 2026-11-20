@@ -32,8 +32,8 @@ const MY_BOTTLES_KEY = "bien_xanh_my_bottle_ids";
 
 const WAVE_FRAME_DURATION_MS = 2000;
 const BIRD_FRAME_DURATION_MS = 550;
-const CLOUD_MOVE_DURATION_MS = 17400; // Gấp 3 lần thời gian di chuyển cũ (5800ms * 3)
-const CLOUD_CYCLE_MS = 18600;
+const CLOUD_MOVE_DURATION_MS = 87000; // Tăng thêm 5 lần so với 17400ms (17400 * 5 = 87000ms)
+const CLOUD_CYCLE_MS = 88800;
 
 function getIdList(key) {
   try {
@@ -82,7 +82,8 @@ function createRandomCloudFlock(frameCount) {
     const leftNum = Math.random() * (slotMax - slotMin) + slotMin;
     const topNum = Math.random() * (maxTop - minTop) + minTop;
     const direction = Math.random() < 0.5 ? -1 : 1;
-    const distance = Math.random() * 16 + 12; // Trôi chậm 12px - 28px sang trái hoặc phải
+    const distance = Math.random() * 18 + 14; // Trôi chậm 14px - 32px sang trái hoặc phải
+    const scale = Number((Math.random() * 0.4 + 0.78).toFixed(2)); // Kích thước ngẫu nhiên 0.78x - 1.18x
 
     return {
       id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`,
@@ -90,6 +91,7 @@ function createRandomCloudFlock(frameCount) {
       left: `${leftNum.toFixed(1)}%`,
       top: `${topNum.toFixed(1)}%`,
       driftPx: direction * distance,
+      scale,
     };
   });
 }
@@ -382,6 +384,7 @@ export default function App() {
           height: 12%;
           pointer-events: none;
           overflow: hidden;
+          transform-origin: center center;
           will-change: transform, opacity;
           z-index: 4;
         }
@@ -477,7 +480,7 @@ export default function App() {
                 left: cloud.left,
                 top: cloud.top,
                 opacity: cloudVisible ? 0.92 : 0,
-                transform: `translateX(${cloudDrifting ? cloud.driftPx : 0}px)`,
+                transform: `translateX(${cloudDrifting ? cloud.driftPx : 0}px) scale(${cloud.scale})`,
                 transition: cloudDrifting
                   ? `transform ${CLOUD_MOVE_DURATION_MS}ms linear, opacity 0.75s ease-in-out`
                   : "transform 0s linear, opacity 0.75s ease-in-out",

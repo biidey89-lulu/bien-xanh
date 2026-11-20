@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import beachBg from "./assets/beach-bg.png";
 import bottleImg from "./assets/bottle.png";
 import letterImg from "./assets/letter.png";
+import writePanelImg from "./assets/write-panel.png";
 import wave1 from "./assets/wave-1.png";
 import wave2 from "./assets/wave-2.png";
 import wave3 from "./assets/wave-3.png";
@@ -462,15 +463,19 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleDropBottle}
             style={{
-              backgroundColor: "#fffdf7",
+              position: "relative",
+              backgroundImage: `url(${writePanelImg})`,
+              backgroundSize: "100% 100%",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+              backgroundColor: "transparent",
               color: "#1e293b",
               maxWidth: "420px",
               width: "100%",
               maxHeight: "86vh",
               overflowY: "auto",
               borderRadius: "20px",
-              padding: "22px",
-              border: "1px solid rgba(2, 132, 199, 0.22)",
+              padding: "24px 22px",
               boxShadow: "0 18px 42px rgba(9, 30, 58, 0.28)",
               boxSizing: "border-box",
             }}

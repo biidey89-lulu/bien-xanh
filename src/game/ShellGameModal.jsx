@@ -67,7 +67,7 @@ export default function ShellGameModal({ onClose }) {
     setUnlockedLevel(maxAllowed);
     setCurrentLevelNum(cfg.level);
     setBoard(createInitialBoard(cfg));
-    setScore(0);
+    setScore(0); // Luôn đưa điểm về 0 khi bắt đầu hoặc chuyển level
     setMovesLeft(cfg.moves);
     setSelectedPos(null);
     setGameStatus("playing");
@@ -217,24 +217,26 @@ export default function ShellGameModal({ onClose }) {
           overflow: hidden;
         }
         .shell-grid-5x8 {
-          position: absolute;
-          left: 11.5%;
-          right: 11.5%;
-          top: 6.2%;
-          bottom: 7.2%;
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          grid-template-rows: repeat(8, 1fr);
-          gap: 2px;
+           position: absolute;
+           left: 9.6%;
+           right: 9.6%;
+           top: 5.4%;     /* Giữ mép trên để hàng 1 bám sát vị trí hiện tại */
+           bottom: 10.2%; /* Tăng bottom để kéo các hàng từ hàng 2 đến hàng cuối dâng lên đều */
+           display: grid;
+           grid-template-columns: repeat(5, minmax(0, 1fr));
+           grid-template-rows: repeat(8, minmax(0, 1fr));
+           gap: 3px;
         }
         .shell-cell-btn {
           position: relative;
           width: 100%;
           height: 100%;
+          min-width: 0;
+          min-height: 0;
           background: transparent;
           border: 2px solid transparent;
-          border-radius: 10px;
-          padding: 4px;
+          border-radius: 8px;
+          padding: 2px;
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -244,12 +246,12 @@ export default function ShellGameModal({ onClose }) {
         .shell-cell-btn.selected {
           border-color: #0284c7;
           background-color: rgba(2, 132, 199, 0.22);
-          transform: scale(1.06);
+          transform: scale(1.05);
           z-index: 2;
         }
         .shell-cell-btn img {
-          width: 86%;
-          height: 86%;
+          width: 82%;
+          height: 82%;
           object-fit: contain;
           pointer-events: none;
           filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.22));
@@ -257,7 +259,7 @@ export default function ShellGameModal({ onClose }) {
         .shell-toast {
           position: absolute;
           left: 50%;
-          top: 12px;
+          top: 10px;
           transform: translateX(-50%);
           background-color: rgba(15, 52, 96, 0.9);
           color: #fffdf7;

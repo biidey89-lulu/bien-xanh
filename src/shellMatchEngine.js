@@ -11,7 +11,6 @@ export const ALL_SHELL_TYPES = [
   "shell-7",
 ];
 
-// 10 level đầu: mục tiêu 100 -> 1000, số loại vỏ sò 4 -> 7, số lượt tăng dần có cân đối độ khó
 export const LEVELS_1_TO_10 = Array.from({ length: 10 }, (_, idx) => {
   const level = idx + 1;
   const targetScore = level * 100;
@@ -32,7 +31,6 @@ export const LEVELS_1_TO_10 = Array.from({ length: 10 }, (_, idx) => {
     moves,
     shellCount,
     allowedShells: ALL_SHELL_TYPES.slice(0, shellCount),
-    // Hook mở rộng tương lai (chưa bật ở 10 level đầu)
     presetBlockers: [],
     presetBoosters: { hammer: 0, wave: 0 },
   };
@@ -56,11 +54,9 @@ export function createCell(r, c, kind, options = {}) {
       ? {
           id: nextUid(),
           kind,
-          // Tương lai: "row_clear" | "col_clear" | "area_3x3" | "color_clear"
           special: options.special || null,
         }
       : null,
-    // Tương lai: { type: "rock" | "cage", hp: 1, movable: false, blocksGravity: false }
     blocker: options.blocker || null,
   };
 }
@@ -82,7 +78,6 @@ export function findMatches(grid) {
   const matches = [];
   const matchedKeys = new Set();
 
-  // Hàng ngang >= 3
   for (let r = 0; r < rows; r++) {
     let runStart = 0;
     while (runStart < cols) {
@@ -107,7 +102,6 @@ export function findMatches(grid) {
     }
   }
 
-  // Cột dọc >= 3
   for (let c = 0; c < cols; c++) {
     let runStart = 0;
     while (runStart < rows) {
@@ -193,21 +187,23 @@ export function createInitialBoard(levelConfig) {
 
       for (let c = 0; c < cols; c++) {
         const blocker = blockerMap.get(`${r},${c}`) || null;
+        const pool = [];
 
-        const candidates = allowedShells.filter((kind) => {
-          const left1 = c >= 1 ? row[c - 1]?.piece?.kind : null;
-          const left2 = c >= 2 ? row[c - 2]?.piece?.kind : null;
-          if (left1 === kind && left2 === kind) return false;
+        for (let i = 0; i < allowedShells.length; i++) {
+          const kind = allowedShells[i];
+          const left1 = c >= 1 && row[c - 1]?.piece ? row[c - 1].piece.kind : null;
+          const left2 = c >= 2 && row[c - 2]?.piece ? row[c - 2].piece.kind : null;
+          if (left1 === kind && left2 === kind) continue;
 
-          const up1 = r >= 1 ? grid[r - 1]?.[c]?.piece?.kind : null;
-          const up2 = r >= 2 ? grid[r - 2]?.[c]?.piece?.kind : null;
-          if (up1 === kind && up2 === kind) return false;
+          const up1 = r >= 1 && grid[r - 1]?.[c]?.piece ? grid[r - 1][c].piece.kind : null;
+          const up2 = r >= 2 && grid[r - 2]?.[c]?.piece ? grid[r - 2][c].piece.kind : null;
+          if (up1 === kind && up2 === kind) continue;
 
-          return true;
-        });
+          pool.push(kind);
+        }
 
-        const pool = candidates.length > 0 ? candidates : allowedShells;
-        const chosenKind = pool[Math.floor(Math.random() * pool.length)];
+        const finalPool = pool.length > 0 ? pool : allowedShells;
+        const chosenKind = finalPool[Math.floor(Math.random() * finalPool.length)];
         row.push(createCell(r, c, chosenKind, { blocker }));
       }
 
@@ -232,7 +228,6 @@ export function createInitialBoard(levelConfig) {
   return fallbackGrid;
 }
 
-// Hook mở rộng cho vật phẩm đặc biệt (special) khi bị phá
 function expandDestructionWithFutureHooks(grid, initialKeys) {
   const rows = grid.length;
   const cols = grid[0].length;
@@ -289,7 +284,6 @@ function applyGravityAndRefill(grid, keysToClear, allowedShells) {
     const [r, c] = key.split(",").map(Number);
     const cell = next[r][c];
 
-    // Hook vật cản (blocker): trừ hp trước
     if (cell.blocker) {
       cell.blocker.hp -= 1;
       if (cell.blocker.hp <= 0) {
@@ -400,7 +394,6 @@ export function resolveSwapTurn(grid, posA, posB, levelConfig) {
   };
 }
 
-// Hook vật phá (Booster) cho tương lai
 export function applyHammerBreaker(grid, targetPos, levelConfig) {
   const { r, c } = targetPos;
   if (!grid[r]?.[c]) return { valid: false };

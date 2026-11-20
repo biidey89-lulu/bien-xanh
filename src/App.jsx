@@ -469,20 +469,20 @@ export default function App() {
               background-color: transparent;
               color: #3b2818;
               width: 100%;
-              max-width: 440px;
-              min-height: 580px;
-              max-height: 94dvh;
+              max-width: 520px;
+              min-height: 460px;
+              max-height: 92dvh;
               overflow-y: auto;
-              padding: 132px 64px 118px 64px;
+              padding: 96px 76px 86px 76px;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
             }
             @media (max-width: 600px) {
               .write-sheet {
-                max-width: 420px;
-                min-height: 540px;
-                padding: 124px 56px 112px 56px;
+                max-width: 440px;
+                min-height: 440px;
+                padding: 92px 64px 82px 64px;
               }
             }
           `}</style>
@@ -498,7 +498,7 @@ export default function App() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: "8px",
-                marginBottom: "12px",
+                marginBottom: "10px",
               }}
             >
               <h3
@@ -542,8 +542,8 @@ export default function App() {
               onChange={(e) => setNickname(e.target.value)}
               style={{
                 width: "100%",
-                padding: "9px 11px",
-                marginBottom: "10px",
+                padding: "8px 11px",
+                marginBottom: "9px",
                 borderRadius: "8px",
                 border: "1px solid rgba(59, 40, 24, 0.28)",
                 backgroundColor: "transparent",
@@ -555,7 +555,7 @@ export default function App() {
             />
 
             <textarea
-              rows={5}
+              rows={4}
               maxLength={500}
               required
               placeholder="Viết điều bạn muốn gửi ra biển (tối đa 500 ký tự)..."
@@ -563,7 +563,7 @@ export default function App() {
               onChange={(e) => setContent(e.target.value)}
               style={{
                 width: "100%",
-                padding: "10px 11px",
+                padding: "9px 11px",
                 borderRadius: "10px",
                 border: "1px solid rgba(59, 40, 24, 0.28)",
                 backgroundColor: "transparent",
@@ -571,7 +571,7 @@ export default function App() {
                 fontSize: "13.5px",
                 lineHeight: 1.5,
                 resize: "none",
-                minHeight: "125px",
+                minHeight: "105px",
                 outline: "none",
                 boxSizing: "border-box",
               }}
@@ -582,8 +582,8 @@ export default function App() {
                 fontSize: "12px",
                 color: "#5c4632",
                 textAlign: "right",
-                marginTop: "6px",
-                marginBottom: "10px",
+                marginTop: "5px",
+                marginBottom: "8px",
               }}
             >
               {content.length} / 500

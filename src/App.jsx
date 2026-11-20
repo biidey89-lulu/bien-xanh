@@ -455,7 +455,7 @@ export default function App() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "16px",
+            padding: "12px",
             zIndex: 30,
           }}
         >
@@ -470,12 +470,15 @@ export default function App() {
               backgroundPosition: "center",
               backgroundColor: "transparent",
               color: "#3b2818",
-              maxWidth: "420px",
+              maxWidth: "500px",
               width: "100%",
-              maxHeight: "88vh",
+              minHeight: "540px",
+              maxHeight: "92vh",
               overflowY: "auto",
-              padding: "56px 46px 50px 46px",
+              padding: "76px 64px 68px 64px",
               boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <div
@@ -484,28 +487,28 @@ export default function App() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: "8px",
-                marginBottom: "12px",
+                marginBottom: "14px",
               }}
             >
               <h3
                 style={{
                   margin: 0,
-                  fontSize: "17px",
+                  fontSize: "18px",
                   color: "#0f3460",
                   fontWeight: 700,
                 }}
               >
-                🌊 Gửi tâm sự vào chai
+                Gửi tâm sự vào chai
               </h3>
               <button
                 type="button"
                 onClick={() => setModalMode(null)}
                 aria-label="Đóng"
                 style={{
-                  width: "28px",
-                  height: "28px",
+                  width: "30px",
+                  height: "30px",
                   borderRadius: "999px",
-                  border: "1px solid rgba(59, 40, 24, 0.25)",
+                  border: "1px solid rgba(59, 40, 24, 0.28)",
                   backgroundColor: "transparent",
                   color: "#3b2818",
                   fontSize: "14px",
@@ -528,8 +531,8 @@ export default function App() {
               onChange={(e) => setNickname(e.target.value)}
               style={{
                 width: "100%",
-                padding: "8px 10px",
-                marginBottom: "10px",
+                padding: "9px 12px",
+                marginBottom: "12px",
                 borderRadius: "8px",
                 border: "1px solid rgba(59, 40, 24, 0.28)",
                 backgroundColor: "transparent",
@@ -549,7 +552,7 @@ export default function App() {
               onChange={(e) => setContent(e.target.value)}
               style={{
                 width: "100%",
-                padding: "10px",
+                padding: "10px 12px",
                 borderRadius: "10px",
                 border: "1px solid rgba(59, 40, 24, 0.28)",
                 backgroundColor: "transparent",
@@ -557,7 +560,7 @@ export default function App() {
                 fontSize: "14px",
                 lineHeight: 1.55,
                 resize: "none",
-                minHeight: "120px",
+                minHeight: "135px",
                 outline: "none",
                 boxSizing: "border-box",
               }}
@@ -568,7 +571,7 @@ export default function App() {
                 fontSize: "12px",
                 color: "#5c4632",
                 textAlign: "right",
-                marginTop: "4px",
+                marginTop: "6px",
                 marginBottom: "12px",
               }}
             >
@@ -593,37 +596,21 @@ export default function App() {
             <div
               style={{
                 display: "flex",
-                gap: "8px",
                 justifyContent: "flex-end",
                 alignItems: "center",
+                marginTop: "auto",
               }}
             >
-              <button
-                type="button"
-                onClick={() => setModalMode(null)}
-                style={{
-                  padding: "8px 14px",
-                  borderRadius: "999px",
-                  border: "1px solid rgba(59, 40, 24, 0.32)",
-                  backgroundColor: "transparent",
-                  color: "#3b2818",
-                  fontSize: "13.5px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Huỷ
-              </button>
               <button
                 type="submit"
                 disabled={loading}
                 style={{
-                  padding: "8px 16px",
+                  padding: "9px 18px",
                   borderRadius: "999px",
                   border: "none",
                   backgroundColor: loading ? "#7dd3fc" : "#0284c7",
                   color: "#ffffff",
-                  fontSize: "13.5px",
+                  fontSize: "14px",
                   fontWeight: 700,
                   cursor: loading ? "not-allowed" : "pointer",
                 }}

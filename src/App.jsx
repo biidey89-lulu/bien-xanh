@@ -443,8 +443,9 @@ export default function App() {
             }
             .read-close-btn {
               position: absolute;
-              bottom: 26px;
-              right: 34px;
+              bottom: 24px;
+              left: 50%;
+              transform: translateX(-50%);
               padding: 0;
               border: none;
               background: transparent;
@@ -458,9 +459,8 @@ export default function App() {
               z-index: 5;
             }
             .read-close-btn:hover {
-              transform: scale(1.04);
+              transform: translateX(-50%) scale(1.04);
             }
-            /* Trong modalMode === "read" */
             .read-close-img {
               width: 108px;
               height: auto;
@@ -473,8 +473,9 @@ export default function App() {
                 padding: 66px 66px 104px 66px;
               }
               .read-close-btn {
-                bottom: 24px;
-                right: 28px;
+                bottom: 22px;
+                left: 50%;
+                transform: translateX(-50%);
               }
               .read-close-img {
                 width: 94px;
@@ -623,8 +624,9 @@ export default function App() {
             }
             .write-submit-btn {
               position: absolute;
-              bottom: 26px;
-              right: 34px;
+              bottom: 24px;
+              left: 50%;
+              transform: translateX(-50%);
               padding: 0;
               border: none;
               background: transparent;
@@ -638,14 +640,13 @@ export default function App() {
               z-index: 5;
             }
             .write-submit-btn:hover {
-              transform: scale(1.04);
+              transform: translateX(-50%) scale(1.04);
             }
             .write-submit-btn:disabled {
               opacity: 0.55;
               cursor: not-allowed;
-              transform: none;
+              transform: translateX(-50%);
             }
-            /* Trong modalMode === "write" */
             .write-submit-img {
               width: 108px;
               height: auto;
@@ -662,8 +663,9 @@ export default function App() {
                 right: 54px;
               }
               .write-submit-btn {
-                bottom: 24px;
-                right: 28px;
+                bottom: 22px;
+                left: 50%;
+                transform: translateX(-50%);
               }
               .write-submit-img {
                 width: 94px;

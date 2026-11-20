@@ -11,6 +11,11 @@ import wave3 from "./assets/wave-3.png";
 import wave4 from "./assets/wave-4.png";
 import wave5 from "./assets/wave-5.png";
 import wave6 from "./assets/wave-6.png";
+import bird1 from "./assets/bird-1.png";
+import bird2 from "./assets/bird-2.png";
+import bird3 from "./assets/bird-3.png";
+import bird4 from "./assets/bird-4.png";
+import bird5 from "./assets/bird-5.png";
 import ambientSeaAudio from "./assets/ambient-sea.mp3";
 
 const supabase = createClient(
@@ -22,6 +27,7 @@ const SEEN_BOTTLES_KEY = "bien_xanh_seen_bottle_ids";
 const MY_BOTTLES_KEY = "bien_xanh_my_bottle_ids";
 
 const WAVE_FRAME_DURATION_MS = 2000;
+const BIRD_FRAME_DURATION_MS = 280;
 
 function getIdList(key) {
   try {
@@ -58,6 +64,9 @@ export default function App() {
   const waveFrames = [wave1, wave2, wave3, wave4, wave5, wave6];
   const [activeWaveIndex, setActiveWaveIndex] = useState(0);
 
+  const birdFrames = [bird1, bird2, bird3, bird4, bird5];
+  const [activeBirdIndex, setActiveBirdIndex] = useState(0);
+
   useEffect(() => {
     if (waveFrames.length <= 1) return;
     const timer = setInterval(() => {
@@ -65,6 +74,14 @@ export default function App() {
     }, WAVE_FRAME_DURATION_MS);
     return () => clearInterval(timer);
   }, [waveFrames.length]);
+
+  useEffect(() => {
+    if (birdFrames.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveBirdIndex((prev) => (prev + 1) % birdFrames.length);
+    }, BIRD_FRAME_DURATION_MS);
+    return () => clearInterval(timer);
+  }, [birdFrames.length]);
 
   useEffect(() => {
     const audio = new Audio(ambientSeaAudio);
@@ -272,6 +289,25 @@ export default function App() {
           overflow: hidden;
           z-index: 5;
         }
+        @keyframes flockDrift {
+          0%, 100% {
+            transform: translate(0px, 0px);
+          }
+          50% {
+            transform: translate(12px, -6px);
+          }
+        }
+        .sky-birds-layer {
+          position: absolute;
+          left: 6%;
+          top: 4%;
+          width: 88%;
+          aspect-ratio: 1 / 1;
+          pointer-events: none;
+          overflow: hidden;
+          animation: flockDrift 7s ease-in-out infinite;
+          z-index: 6;
+        }
         @keyframes bottleFloat {
           0%, 100% {
             transform: translate(-50%, -50%) rotate(-5deg);
@@ -340,6 +376,25 @@ export default function App() {
                   objectFit: "fill",
                   opacity: idx === activeWaveIndex ? 1 : 0,
                   transition: "opacity 0.35s ease-in-out",
+                }}
+              />
+            ))}
+          </div>
+
+          <div aria-hidden="true" className="sky-birds-layer">
+            {birdFrames.map((frameSrc, idx) => (
+              <img
+                key={idx}
+                src={frameSrc}
+                alt=""
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  opacity: idx === activeBirdIndex ? 1 : 0,
+                  transition: "opacity 0.08s linear",
                 }}
               />
             ))}

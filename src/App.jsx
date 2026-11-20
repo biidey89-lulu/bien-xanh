@@ -445,4 +445,324 @@ export default function App() {
         </div>
       )}
 
-      {modalMode === "
+      {modalMode === "write" && (
+        <div
+          onClick={() => !loading && setModalMode(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(9, 30, 58, 0.45)",
+            backdropFilter: "blur(3px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px",
+            zIndex: 30,
+          }}
+        >
+          <style>{`
+            .write-sheet {
+              position: relative;
+              color-scheme: light;
+              background-image: url(${writePanelImg});
+              background-size: 100% 100%;
+              background-repeat: no-repeat;
+              background-position: center;
+              background-color: transparent;
+              color: #3b2818;
+              width: 100%;
+              max-width: 520px;
+              min-height: 460px;
+              max-height: 92dvh;
+              overflow-y: auto;
+              padding: 68px 84px 126px 84px;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+            }
+            .write-title {
+              margin: 0 0 12px 0;
+              text-align: center;
+              font-size: 16px;
+              color: #0f3460;
+              font-weight: 700;
+              flex-shrink: 0;
+            }
+            .write-close-btn {
+              position: absolute;
+              top: 56px;
+              right: 68px;
+              width: 28px;
+              height: 28px;
+              min-width: 28px;
+              max-width: 28px;
+              flex: 0 0 28px;
+              padding: 0;
+              border-radius: 999px;
+              border: 1px solid rgba(59, 40, 24, 0.35);
+              background-color: rgba(255, 250, 238, 0.85);
+              -webkit-appearance: none;
+              appearance: none;
+              color: #3b2818;
+              font-size: 13px;
+              line-height: 1;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              z-index: 5;
+            }
+            .write-input {
+              width: 100%;
+              padding: 7px 10px;
+              margin-bottom: 8px;
+              border-radius: 7px;
+              border: 1px solid rgba(59, 40, 24, 0.3);
+              background-color: rgba(255, 252, 244, 0.65);
+              -webkit-appearance: none;
+              appearance: none;
+              color: #2b1d12;
+              font-size: 12.5px;
+              outline: none;
+              box-sizing: border-box;
+              flex-shrink: 0;
+            }
+            .write-input::placeholder,
+            .write-textarea::placeholder {
+              color: rgba(59, 40, 24, 0.65);
+            }
+            .write-textarea {
+              width: 100%;
+              padding: 8px 10px;
+              border-radius: 8px;
+              border: 1px solid rgba(59, 40, 24, 0.3);
+              background-color: rgba(255, 252, 244, 0.65);
+              -webkit-appearance: none;
+              appearance: none;
+              color: #2b1d12;
+              font-size: 12.5px;
+              line-height: 1.45;
+              resize: none;
+              min-height: 110px;
+              outline: none;
+              box-sizing: border-box;
+              flex-shrink: 0;
+            }
+            .write-counter {
+              font-size: 11px;
+              color: #5c4632;
+              text-align: right;
+              margin-top: 4px;
+              flex-shrink: 0;
+            }
+            .write-submit-btn {
+              position: absolute;
+              bottom: 26px;
+              right: 34px;
+              padding: 0;
+              border: none;
+              background: transparent;
+              -webkit-appearance: none;
+              appearance: none;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              transition: opacity 0.2s ease, transform 0.15s ease;
+              z-index: 5;
+            }
+            .write-submit-btn:hover {
+              transform: scale(1.04);
+            }
+            .write-submit-btn:disabled {
+              opacity: 0.55;
+              cursor: not-allowed;
+              transform: none;
+            }
+            .write-submit-img {
+              width: 142px;
+              height: auto;
+              display: block;
+            }
+            @media (max-width: 600px) {
+              .write-sheet {
+                max-width: 440px;
+                min-height: 440px;
+                padding: 64px 66px 118px 66px;
+              }
+              .write-close-btn {
+                top: 52px;
+                right: 54px;
+              }
+              .write-submit-btn {
+                bottom: 24px;
+                right: 28px;
+              }
+              .write-submit-img {
+                width: 126px;
+              }
+            }
+          `}</style>
+
+          <form
+            className="write-sheet"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleDropBottle}
+          >
+            <button
+              type="button"
+              onClick={() => setModalMode(null)}
+              aria-label="Đóng"
+              className="write-close-btn"
+            >
+              ✕
+            </button>
+
+            <h3 className="write-title">Gửi tâm sự vào chai</h3>
+
+            <input
+              type="text"
+              placeholder="Biệt danh (bỏ trống để ẩn danh)"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              className="write-input"
+            />
+
+            <textarea
+              rows={4}
+              maxLength={500}
+              required
+              placeholder="Viết điều bạn muốn gửi ra biển (tối đa 500 ký tự)..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="write-textarea"
+            />
+
+            <div className="write-counter">{content.length} / 500</div>
+
+            {statusMsg && (
+              <p
+                style={{
+                  color: "#b91c1c",
+                  backgroundColor: "transparent",
+                  fontSize: "11.5px",
+                  fontWeight: 600,
+                  marginTop: "4px",
+                  marginBottom: 0,
+                }}
+              >
+                {statusMsg}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              aria-label="Thả xuống biển"
+              title="Thả xuống biển"
+              className="write-submit-btn"
+            >
+              <img
+                src={dropImg}
+                alt="Thả xuống biển"
+                className="write-submit-img"
+              />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {modalMode === "mine" && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+            zIndex: 30,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fffdf7",
+              color: "#1f2937",
+              maxWidth: "440px",
+              width: "100%",
+              maxHeight: "82vh",
+              overflowY: "auto",
+              borderRadius: "16px",
+              padding: "20px",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+              boxSizing: "border-box",
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>📜 Những chiếc chai bạn đã thả</h3>
+
+            {loading ? (
+              <p>Đang tìm lại thư của bạn...</p>
+            ) : myBottles.length === 0 ? (
+              <p style={{ color: "#64748b" }}>
+                Bạn chưa thả chiếc chai nào trên trình duyệt này.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {myBottles.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      padding: "12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#f1f5f9",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#475569",
+                        marginBottom: "6px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: "8px",
+                      }}
+                    >
+                      <strong>{item.nickname || "Ẩn danh"}</strong>
+                      <span>
+                        {item.created_at
+                          ? new Date(item.created_at).toLocaleString("vi-VN")
+                          : ""}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                      {item.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: "16px", textAlign: "right" }}>
+              <button
+                type="button"
+                onClick={() => setModalMode(null)}
+                style={{
+                  padding: "9px 18px",
+                  borderRadius: "8px",
+                  border: "none",
+                  backgroundColor: "#0284c7",
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

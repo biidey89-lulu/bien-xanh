@@ -159,7 +159,7 @@ export default function App() {
 
     if (error) {
       setCurrentBottle({
-        nickname: "Biển cả",
+        nickname: "Biển đêm",
         content: "Không thể vớt chai lúc này: " + error.message,
       });
       return;
@@ -167,9 +167,9 @@ export default function App() {
 
     if (!data || data.length === 0) {
       setCurrentBottle({
-        nickname: "Biển cả",
+        nickname: "Biển đêm",
         content:
-          "Chưa có lá thư nào trôi dạt hôm nay. Hãy là người đầu tiên thả một chiếc chai nhé!",
+          "Chưa có lá thư nào trôi dạt giữa màn đêm. Hãy là người đầu tiên thả một chiếc chai nhé!",
       });
       return;
     }
@@ -228,7 +228,7 @@ export default function App() {
     setContent("");
     setNickname("");
     setModalMode(null);
-    alert("Chiếc chai của bạn đã được thả trôi ra biển!");
+    alert("Chiếc chai của bạn đã được thả trôi ra biển đêm!");
   };
 
   const handleOpenMyBottles = async () => {
@@ -263,7 +263,7 @@ export default function App() {
         width: "100%",
         height: "100dvh",
         overflow: "hidden",
-        backgroundColor: "#0b2545",
+        backgroundColor: "#051024",
       }}
     >
       <style>{`
@@ -284,7 +284,7 @@ export default function App() {
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 14px 44px rgba(0, 0, 0, 0.65);
         }
         @media (max-aspect-ratio: 9/16) {
           .scene-frame {
@@ -294,6 +294,25 @@ export default function App() {
             max-height: 100dvh;
             aspect-ratio: 9 / 16;
           }
+        }
+        .night-bg-base {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          filter: brightness(0.46) contrast(1.08) saturate(0.85) hue-rotate(192deg);
+        }
+        .night-atmosphere-tint {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            180deg,
+            rgba(5, 13, 33, 0.52) 0%,
+            rgba(8, 22, 52, 0.34) 48%,
+            rgba(4, 12, 28, 0.58) 100%
+          );
+          pointer-events: none;
+          z-index: 4;
         }
         @keyframes cloudDrift {
           0%, 100% {
@@ -312,6 +331,7 @@ export default function App() {
           pointer-events: none;
           overflow: hidden;
           animation: cloudDrift 18s ease-in-out infinite;
+          filter: brightness(0.42) contrast(1.06) saturate(0.75) hue-rotate(190deg);
           z-index: 4;
         }
         .wave-overlay {
@@ -322,6 +342,7 @@ export default function App() {
           height: 61.5%;
           pointer-events: none;
           overflow: hidden;
+          filter: brightness(0.48) contrast(1.12) saturate(0.85) hue-rotate(188deg);
           z-index: 5;
         }
         @keyframes flockDrift {
@@ -341,7 +362,21 @@ export default function App() {
           pointer-events: none;
           overflow: hidden;
           animation: flockDrift 14s ease-in-out infinite;
+          filter: brightness(0.62) contrast(1.05) saturate(0.7) hue-rotate(185deg);
           z-index: 6;
+        }
+        .night-pill-btn {
+          padding: 8px 13px;
+          border-radius: 999px;
+          border: 1px solid rgba(148, 197, 255, 0.28);
+          background-color: rgba(9, 23, 47, 0.84);
+          color: #e2efff;
+          font-size: 13px;
+          font-weight: bold;
+          cursor: pointer;
+          backdrop-filter: blur(6px);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+          z-index: 20;
         }
         @keyframes bottleFloat {
           0%, 100% {
@@ -353,6 +388,15 @@ export default function App() {
         }
         .floating-bottle {
           animation: bottleFloat 3.2s ease-in-out infinite;
+          filter: brightness(0.88) drop-shadow(0 0 10px rgba(125, 196, 255, 0.34));
+        }
+        .night-letter-btn img {
+          filter: brightness(0.9) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+          transition: transform 0.15s ease, filter 0.2s ease;
+        }
+        .night-letter-btn:hover img {
+          transform: scale(1.04);
+          filter: brightness(0.98) drop-shadow(0 0 12px rgba(147, 197, 253, 0.4));
         }
       `}</style>
 
@@ -366,7 +410,7 @@ export default function App() {
           width: "calc(100% + 48px)",
           height: "calc(100% + 48px)",
           objectFit: "cover",
-          filter: "blur(22px) brightness(0.88)",
+          filter: "blur(24px) brightness(0.35) saturate(0.75) hue-rotate(195deg)",
           transform: "scale(1.06)",
           pointerEvents: "none",
           zIndex: 1,
@@ -388,13 +432,8 @@ export default function App() {
         <div className="scene-frame">
           <img
             src={beachBg}
-            alt="Bãi biển"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
+            alt="Bãi biển đêm"
+            className="night-bg-base"
           />
 
           <div aria-hidden="true" className="sky-clouds-layer">
@@ -409,7 +448,7 @@ export default function App() {
                   width: "100%",
                   height: "100%",
                   objectFit: "contain",
-                  opacity: idx === activeCloudIndex ? 0.92 : 0,
+                  opacity: idx === activeCloudIndex ? 0.85 : 0,
                   transition: "opacity 0.9s ease-in-out",
                 }}
               />
@@ -454,26 +493,18 @@ export default function App() {
             ))}
           </div>
 
+          <div aria-hidden="true" className="night-atmosphere-tint" />
+
           <button
             type="button"
             onClick={toggleMusic}
             aria-label={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
             title={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
+            className="night-pill-btn"
             style={{
               position: "absolute",
               top: "14px",
               left: "14px",
-              padding: "8px 12px",
-              borderRadius: "999px",
-              border: "1px solid rgba(15, 52, 96, 0.18)",
-              backgroundColor: "rgba(255, 253, 247, 0.88)",
-              color: "#0f3460",
-              fontSize: "13px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              backdropFilter: "blur(6px)",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.14)",
-              zIndex: 20,
             }}
           >
             {isPlaying ? "🔊 Nhạc" : "🔇 Nhạc"}
@@ -482,21 +513,11 @@ export default function App() {
           <button
             type="button"
             onClick={handleOpenMyBottles}
+            className="night-pill-btn"
             style={{
               position: "absolute",
               top: "14px",
               right: "14px",
-              padding: "8px 14px",
-              borderRadius: "999px",
-              border: "1px solid rgba(15, 52, 96, 0.18)",
-              backgroundColor: "rgba(255, 253, 247, 0.88)",
-              color: "#0f3460",
-              fontSize: "13px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              backdropFilter: "blur(6px)",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.14)",
-              zIndex: 20,
             }}
           >
             📜 Thư của tôi
@@ -544,6 +565,7 @@ export default function App() {
             }}
             aria-label="Thả chai xuống biển"
             title="Thả chai xuống biển"
+            className="night-letter-btn"
             style={{
               position: "absolute",
               bottom: "18px",
@@ -577,8 +599,8 @@ export default function App() {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(9, 30, 58, 0.45)",
-            backdropFilter: "blur(3px)",
+            backgroundColor: "rgba(3, 10, 24, 0.72)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -595,6 +617,7 @@ export default function App() {
               background-repeat: no-repeat;
               background-position: center;
               background-color: transparent;
+              filter: brightness(0.9);
               color: #3b2818;
               width: 100%;
               max-width: 520px;
@@ -699,8 +722,8 @@ export default function App() {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(9, 30, 58, 0.45)",
-            backdropFilter: "blur(3px)",
+            backgroundColor: "rgba(3, 10, 24, 0.72)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -717,6 +740,7 @@ export default function App() {
               background-repeat: no-repeat;
               background-position: center;
               background-color: transparent;
+              filter: brightness(0.9);
               color: #3b2818;
               width: 100%;
               max-width: 520px;
@@ -927,7 +951,8 @@ export default function App() {
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backgroundColor: "rgba(3, 10, 24, 0.75)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -937,15 +962,16 @@ export default function App() {
         >
           <div
             style={{
-              backgroundColor: "#fffdf7",
-              color: "#1f2937",
+              backgroundColor: "#0c1d38",
+              color: "#e2efff",
+              border: "1px solid rgba(148, 197, 255, 0.22)",
               maxWidth: "440px",
               width: "100%",
               maxHeight: "82vh",
               overflowY: "auto",
               borderRadius: "16px",
               padding: "20px",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+              boxShadow: "0 14px 36px rgba(0,0,0,0.6)",
               boxSizing: "border-box",
             }}
           >
@@ -954,7 +980,7 @@ export default function App() {
             {loading ? (
               <p>Đang tìm lại thư của bạn...</p>
             ) : myBottles.length === 0 ? (
-              <p style={{ color: "#64748b" }}>
+              <p style={{ color: "#93b4d8" }}>
                 Bạn chưa thả chiếc chai nào trên trình duyệt này.
               </p>
             ) : (
@@ -965,14 +991,14 @@ export default function App() {
                     style={{
                       padding: "12px",
                       borderRadius: "10px",
-                      backgroundColor: "#f1f5f9",
-                      border: "1px solid #e2e8f0",
+                      backgroundColor: "#13294b",
+                      border: "1px solid rgba(148, 197, 255, 0.16)",
                     }}
                   >
                     <div
                       style={{
                         fontSize: "12px",
-                        color: "#475569",
+                        color: "#9bc2eb",
                         marginBottom: "6px",
                         display: "flex",
                         justifyContent: "space-between",
@@ -1001,9 +1027,9 @@ export default function App() {
                 style={{
                   padding: "9px 18px",
                   borderRadius: "8px",
-                  border: "none",
-                  backgroundColor: "#0284c7",
-                  color: "#fff",
+                  border: "1px solid rgba(147, 197, 253, 0.35)",
+                  backgroundColor: "#1d4ed8",
+                  color: "#f8fafc",
                   cursor: "pointer",
                 }}
               >

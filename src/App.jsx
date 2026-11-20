@@ -32,7 +32,8 @@ const MY_BOTTLES_KEY = "bien_xanh_my_bottle_ids";
 
 const WAVE_FRAME_DURATION_MS = 2000;
 const BIRD_FRAME_DURATION_MS = 550;
-const CLOUD_FRAME_DURATION_MS = 2200;
+const CLOUD_CYCLE_MS = 7200;
+const CLOUD_MOVE_DURATION_MS = 5800;
 
 function getIdList(key) {
   try {
@@ -57,6 +58,24 @@ function clearIdList(key) {
   localStorage.removeItem(key);
 }
 
+function createRandomCloudCycle() {
+  const minLeft = 8;
+  const maxLeft = 58;
+  const minTop = 3;
+  const maxTop = 20;
+
+  const leftNum = Math.random() * (maxLeft - minLeft) + minLeft;
+  const topNum = Math.random() * (maxTop - minTop) + minTop;
+  const direction = Math.random() < 0.5 ? -1 : 1;
+  const distance = Math.random() * 14 + 10; // Trôi chậm 10px - 24px sang trái hoặc phải
+
+  return {
+    left: `${leftNum.toFixed(1)}%`,
+    top: `${topNum.toFixed(1)}%`,
+    driftPx: direction * distance,
+  };
+}
+
 export default function App() {
   const [modalMode, setModalMode] = useState(null);
   const [currentBottle, setCurrentBottle] = useState(null);
@@ -74,6 +93,9 @@ export default function App() {
 
   const cloudFrames = [cloud1, cloud2, cloud3, cloud4];
   const [activeCloudIndex, setActiveCloudIndex] = useState(0);
+  const [cloudCycle, setCloudCycle] = useState(() => createRandomCloudCycle());
+  const [cloudDrifting, setCloudDrifting] = useState(false);
+  const [cloudVisible, setCloudVisible] = useState(true);
 
   useEffect(() => {
     if (waveFrames.length <= 1) return;
@@ -93,10 +115,41 @@ export default function App() {
 
   useEffect(() => {
     if (cloudFrames.length <= 1) return;
-    const timer = setInterval(() => {
-      setActiveCloudIndex((prev) => (prev + 1) % cloudFrames.length);
-    }, CLOUD_FRAME_DURATION_MS);
-    return () => clearInterval(timer);
+
+    let driftStartTimer;
+    let fadeOutTimer;
+    let relocateTimer;
+
+    const runCycle = () => {
+      setCloudDrifting(false);
+      driftStartTimer = setTimeout(() => {
+        setCloudDrifting(true);
+      }, 160);
+
+      fadeOutTimer = setTimeout(() => {
+        setCloudVisible(false);
+      }, CLOUD_MOVE_DURATION_MS);
+
+      relocateTimer = setTimeout(() => {
+        setActiveCloudIndex((prev) => (prev + 1) % cloudFrames.length);
+        setCloudCycle(createRandomCloudCycle());
+        setCloudDrifting(false);
+        setCloudVisible(true);
+      }, CLOUD_CYCLE_MS - 450);
+    };
+
+    runCycle();
+
+    const interval = setInterval(() => {
+      runCycle();
+    }, CLOUD_CYCLE_MS);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(driftStartTimer);
+      clearTimeout(fadeOutTimer);
+      clearTimeout(relocateTimer);
+    };
   }, [cloudFrames.length]);
 
   useEffect(() => {
@@ -295,23 +348,13 @@ export default function App() {
             aspect-ratio: 9 / 16;
           }
         }
-        @keyframes cloudDrift {
-          0%, 100% {
-            transform: translateX(-8px);
-          }
-          50% {
-            transform: translateX(10px);
-          }
-        }
         .sky-clouds-layer {
           position: absolute;
-          left: 0%;
-          top: 2%;
-          width: 100%;
-          height: 36%;
+          width: 33.33%;
+          height: 12%;
           pointer-events: none;
           overflow: hidden;
-          animation: cloudDrift 18s ease-in-out infinite;
+          will-change: transform, opacity;
           z-index: 4;
         }
         .wave-overlay {
@@ -397,7 +440,19 @@ export default function App() {
             }}
           />
 
-          <div aria-hidden="true" className="sky-clouds-layer">
+          <div
+            aria-hidden="true"
+            className="sky-clouds-layer"
+            style={{
+              left: cloudCycle.left,
+              top: cloudCycle.top,
+              opacity: cloudVisible ? 0.92 : 0,
+              transform: `translateX(${cloudDrifting ? cloudCycle.driftPx : 0}px)`,
+              transition: cloudDrifting
+                ? `transform ${CLOUD_MOVE_DURATION_MS}ms linear, opacity 0.75s ease-in-out`
+                : "transform 0s linear, opacity 0.75s ease-in-out",
+            }}
+          >
             {cloudFrames.map((frameSrc, idx) => (
               <img
                 key={idx}
@@ -409,8 +464,8 @@ export default function App() {
                   width: "100%",
                   height: "100%",
                   objectFit: "contain",
-                  opacity: idx === activeCloudIndex ? 0.92 : 0,
-                  transition: "opacity 0.9s ease-in-out",
+                  opacity: idx === activeCloudIndex ? 1 : 0,
+                  transition: "opacity 0.6s ease-in-out",
                 }}
               />
             ))}

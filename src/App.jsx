@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import beachBg from "./assets/beach-bg.png";
 import bottleImg from "./assets/bottle.png";
+import letterImg from "./assets/letter.png";
 import wave1 from "./assets/wave-1.png";
 import wave2 from "./assets/wave-2.png";
 import wave3 from "./assets/wave-3.png";
@@ -358,25 +359,32 @@ export default function App() {
               setStatusMsg("");
               setModalMode("write");
             }}
+            aria-label="Thả chai xuống biển"
+            title="Thả chai xuống biển"
             style={{
               position: "absolute",
               bottom: "18px",
               left: "50%",
               transform: "translateX(-50%)",
-              padding: "11px 22px",
-              borderRadius: "999px",
-              border: "2px solid rgba(255,255,255,0.4)",
-              backgroundColor: "#0284c7",
-              color: "#fff",
-              fontSize: "15px",
-              fontWeight: "bold",
-              whiteSpace: "nowrap",
+              background: "transparent",
+              border: "none",
+              padding: 0,
               cursor: "pointer",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.45)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
               zIndex: 20,
             }}
           >
-            ✍️ Thả chai xuống biển
+            <img
+              src={letterImg}
+              alt="Thả chai xuống biển"
+              style={{
+                width: "120px",
+                height: "auto",
+                display: "block",
+              }}
+            />
           </button>
         </div>
       </div>

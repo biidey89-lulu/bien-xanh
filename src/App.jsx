@@ -217,7 +217,7 @@ export default function App() {
           position: absolute;
           left: -3%;
           top: 45%;
-          width: 100%;
+          width: 80%;
           height: 60%;
           pointer-events: none;
           overflow: hidden;

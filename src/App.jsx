@@ -5,6 +5,9 @@ import bottleImg from "./assets/bottle.png";
 import letterImg from "./assets/letter.png";
 import writePanelImg from "./assets/write-panel.png";
 import dropImg from "./assets/drop.png";
+import sonImg from "./assets/son.png";
+import soffImg from "./assets/soff.png";
+import storageImg from "./assets/storage.png";
 import wave1 from "./assets/wave-1.png";
 import wave2 from "./assets/wave-2.png";
 import wave3 from "./assets/wave-3.png";
@@ -32,7 +35,7 @@ const MY_BOTTLES_KEY = "bien_xanh_my_bottle_ids";
 
 const WAVE_FRAME_DURATION_MS = 2000;
 const BIRD_FRAME_DURATION_MS = 550;
-const CLOUD_MOVE_DURATION_MS = 87000; // Tăng thêm 5 lần so với 17400ms (17400 * 5 = 87000ms)
+const CLOUD_MOVE_DURATION_MS = 87000;
 const CLOUD_CYCLE_MS = 88800;
 
 function getIdList(key) {
@@ -59,7 +62,7 @@ function clearIdList(key) {
 }
 
 function createRandomCloudFlock(frameCount) {
-  const count = Math.random() < 0.5 ? 2 : 3; // Ngẫu nhiên 2 hoặc 3 mây
+  const count = Math.random() < 0.5 ? 2 : 3;
   const minTop = 3;
   const maxTop = 20;
 
@@ -82,8 +85,8 @@ function createRandomCloudFlock(frameCount) {
     const leftNum = Math.random() * (slotMax - slotMin) + slotMin;
     const topNum = Math.random() * (maxTop - minTop) + minTop;
     const direction = Math.random() < 0.5 ? -1 : 1;
-    const distance = Math.random() * 18 + 14; // Trôi chậm 14px - 32px sang trái hoặc phải
-    const scale = Number((Math.random() * 0.4 + 0.78).toFixed(2)); // Kích thước ngẫu nhiên 0.78x - 1.18x
+    const distance = Math.random() * 18 + 14;
+    const scale = Number((Math.random() * 0.4 + 0.78).toFixed(2));
 
     return {
       id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`,
@@ -428,6 +431,23 @@ export default function App() {
         .floating-bottle {
           animation: bottleFloat 3.2s ease-in-out infinite;
         }
+        .bottom-dock-btn {
+          background: transparent;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 20;
+        }
+        .bottom-dock-btn img {
+          transition: transform 0.15s ease, filter 0.2s ease;
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+        }
+        .bottom-dock-btn:hover img {
+          transform: scale(1.05);
+        }
       `}</style>
 
       <img
@@ -543,47 +563,45 @@ export default function App() {
             onClick={toggleMusic}
             aria-label={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
             title={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
+            className="bottom-dock-btn"
             style={{
               position: "absolute",
-              top: "14px",
+              bottom: "18px",
               left: "14px",
-              padding: "8px 12px",
-              borderRadius: "999px",
-              border: "1px solid rgba(15, 52, 96, 0.18)",
-              backgroundColor: "rgba(255, 253, 247, 0.88)",
-              color: "#0f3460",
-              fontSize: "13px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              backdropFilter: "blur(6px)",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.14)",
-              zIndex: 20,
             }}
           >
-            {isPlaying ? "🔊 Nhạc" : "🔇 Nhạc"}
+            <img
+              src={isPlaying ? sonImg : soffImg}
+              alt={isPlaying ? "Âm thanh bật" : "Âm thanh tắt"}
+              style={{
+                width: "68px",
+                height: "auto",
+                display: "block",
+              }}
+            />
           </button>
 
           <button
             type="button"
             onClick={handleOpenMyBottles}
+            aria-label="Thư của tôi"
+            title="Thư của tôi"
+            className="bottom-dock-btn"
             style={{
               position: "absolute",
-              top: "14px",
-              right: "14px",
-              padding: "8px 14px",
-              borderRadius: "999px",
-              border: "1px solid rgba(15, 52, 96, 0.18)",
-              backgroundColor: "rgba(255, 253, 247, 0.88)",
-              color: "#0f3460",
-              fontSize: "13px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              backdropFilter: "blur(6px)",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.14)",
-              zIndex: 20,
+              bottom: "18px",
+              left: "92px",
             }}
           >
-            📜 Thư của tôi
+            <img
+              src={storageImg}
+              alt="Thư của tôi"
+              style={{
+                width: "68px",
+                height: "auto",
+                display: "block",
+              }}
+            />
           </button>
 
           <button
@@ -628,18 +646,11 @@ export default function App() {
             }}
             aria-label="Thả chai xuống biển"
             title="Thả chai xuống biển"
+            className="bottom-dock-btn"
             style={{
               position: "absolute",
               bottom: "18px",
               right: "14px",
-              background: "transparent",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 20,
             }}
           >
             <img

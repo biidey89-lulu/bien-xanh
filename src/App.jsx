@@ -104,6 +104,7 @@ export default function App() {
   const [currentBottle, setCurrentBottle] = useState(null);
   const [myBottles, setMyBottles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [extraNote, setExtraNote] = useState("");
 
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -443,7 +444,21 @@ export default function App() {
         .floating-bottle {
           animation: bottleFloat 3.2s ease-in-out infinite;
         }
-        .bottom-dock-btn {
+        .bottom-dock {
+          position: absolute;
+          bottom: 14px;
+          left: 10px;
+          right: 10px;
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          align-items: center;
+          justify-items: center;
+          gap: 6px;
+          z-index: 20;
+        }
+        .dock-slot-btn {
+          width: 56px;
+          height: 56px;
           background: transparent;
           border: none;
           padding: 0;
@@ -451,14 +466,40 @@ export default function App() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          z-index: 20;
+          transition: transform 0.15s ease;
         }
-        .bottom-dock-btn img {
-          transition: transform 0.15s ease, filter 0.2s ease;
-          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+        .dock-slot-btn:hover {
+          transform: scale(1.06);
         }
-        .bottom-dock-btn:hover img {
+        .dock-slot-btn img {
+          width: 54px;
+          height: 54px;
+          object-fit: contain;
+          display: block;
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+        }
+        .dock-extra-slot {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          border: 1px dashed rgba(255, 253, 247, 0.55);
+          background-color: rgba(11, 37, 69, 0.25);
+          color: rgba(255, 253, 247, 0.85);
+          font-size: 10px;
+          font-weight: 600;
+          line-height: 1.15;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 2px;
+          backdrop-filter: blur(4px);
+          transition: transform 0.15s ease, background-color 0.2s ease;
+        }
+        .dock-extra-slot:hover {
           transform: scale(1.05);
+          background-color: rgba(11, 37, 69, 0.42);
         }
       `}</style>
 
@@ -572,52 +613,6 @@ export default function App() {
 
           <button
             type="button"
-            onClick={toggleMusic}
-            aria-label={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
-            title={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
-            className="bottom-dock-btn"
-            style={{
-              position: "absolute",
-              bottom: "18px",
-              left: "14px",
-            }}
-          >
-            <img
-              src={isPlaying ? sonImg : soffImg}
-              alt={isPlaying ? "Âm thanh bật" : "Âm thanh tắt"}
-              style={{
-                width: "68px",
-                height: "auto",
-                display: "block",
-              }}
-            />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleOpenMyBottles}
-            aria-label="Thư của tôi"
-            title="Thư của tôi"
-            className="bottom-dock-btn"
-            style={{
-              position: "absolute",
-              bottom: "18px",
-              left: "92px",
-            }}
-          >
-            <img
-              src={storageImg}
-              alt="Thư của tôi"
-              style={{
-                width: "68px",
-                height: "auto",
-                display: "block",
-              }}
-            />
-          </button>
-
-          <button
-            type="button"
             className="floating-bottle"
             onClick={handlePickBottle}
             title="Nhặt chai lên đọc"
@@ -649,34 +644,124 @@ export default function App() {
             />
           </button>
 
-          <button
-            type="button"
-            onClick={async () => {
-              await ensureMusicPlaying();
-              setStatusMsg("");
-              setModalMode("write");
-            }}
-            aria-label="Thả chai xuống biển"
-            title="Thả chai xuống biển"
-            className="bottom-dock-btn"
-            style={{
-              position: "absolute",
-              bottom: "18px",
-              right: "14px",
-            }}
-          >
-            <img
-              src={letterImg}
-              alt="Thả chai xuống biển"
-              style={{
-                width: "120px",
-                height: "auto",
-                display: "block",
+          <div className="bottom-dock">
+            {/* 1. Loa */}
+            <button
+              type="button"
+              onClick={toggleMusic}
+              aria-label={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
+              title={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
+              className="dock-slot-btn"
+            >
+              <img
+                src={isPlaying ? sonImg : soffImg}
+                alt={isPlaying ? "Âm thanh bật" : "Âm thanh tắt"}
+              />
+            </button>
+
+            {/* 2. Thư của tôi */}
+            <button
+              type="button"
+              onClick={handleOpenMyBottles}
+              aria-label="Thư của tôi"
+              title="Thư của tôi"
+              className="dock-slot-btn"
+            >
+              <img src={storageImg} alt="Thư của tôi" />
+            </button>
+
+            {/* 3. Chính giữa: Thả thư (letter.png) */}
+            <button
+              type="button"
+              onClick={async () => {
+                await ensureMusicPlaying();
+                setStatusMsg("");
+                setModalMode("write");
               }}
-            />
-          </button>
+              aria-label="Thả chai xuống biển"
+              title="Thả chai xuống biển"
+              className="dock-slot-btn"
+            >
+              <img src={letterImg} alt="Thả chai xuống biển" />
+            </button>
+
+            {/* 4. Danh mục mới 1 */}
+            <button
+              type="button"
+              onClick={() => {
+                setExtraNote("Danh mục mới 1 đang chờ bạn đặt tên và tính năng.");
+                setModalMode("extra");
+              }}
+              aria-label="Danh mục mới 1"
+              title="Danh mục mới 1"
+              className="dock-extra-slot"
+            >
+              Mục 1
+            </button>
+
+            {/* 5. Danh mục mới 2 */}
+            <button
+              type="button"
+              onClick={() => {
+                setExtraNote("Danh mục mới 2 đang chờ bạn đặt tên và tính năng.");
+                setModalMode("extra");
+              }}
+              aria-label="Danh mục mới 2"
+              title="Danh mục mới 2"
+              className="dock-extra-slot"
+            >
+              Mục 2
+            </button>
+          </div>
         </div>
       </div>
+
+      {modalMode === "extra" && (
+        <div
+          onClick={() => setModalMode(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+            zIndex: 30,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "#fffdf7",
+              color: "#1f2937",
+              maxWidth: "360px",
+              width: "100%",
+              borderRadius: "16px",
+              padding: "20px",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+              textAlign: "center",
+            }}
+          >
+            <h3 style={{ marginTop: 0, color: "#0f3460" }}>Danh mục mới</h3>
+            <p style={{ color: "#475569", margin: "0 0 16px 0" }}>{extraNote}</p>
+            <button
+              type="button"
+              onClick={() => setModalMode(null)}
+              style={{
+                padding: "8px 18px",
+                borderRadius: "8px",
+                border: "none",
+                backgroundColor: "#0284c7",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
 
       {modalMode === "read" && (
         <div

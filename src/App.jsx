@@ -473,55 +473,58 @@ export default function App() {
               min-height: 460px;
               max-height: 92dvh;
               overflow-y: auto;
-              padding: 112px 92px 104px 92px;
+              padding: 68px 84px 104px 84px;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
             }
             .write-title {
-              margin: 0;
-              font-size: 15px;
+              margin: 0 0 12px 0;
+              text-align: center;
+              font-size: 16px;
               color: #0f3460;
               font-weight: 700;
             }
             .write-close-btn {
-              width: 24px;
-              height: 24px;
+              position: absolute;
+              top: 56px;
+              right: 68px;
+              width: 26px;
+              height: 26px;
               border-radius: 999px;
               border: 1px solid rgba(59, 40, 24, 0.28);
               background-color: transparent;
               color: #3b2818;
-              font-size: 12.5px;
+              font-size: 13px;
               line-height: 1;
               cursor: pointer;
               display: inline-flex;
               align-items: center;
               justify-content: center;
-              flex-shrink: 0;
             }
             .write-input {
               width: 100%;
-              padding: 6px 9px;
-              margin-bottom: 7px;
+              padding: 7px 10px;
+              margin-bottom: 8px;
               border-radius: 7px;
               border: 1px solid rgba(59, 40, 24, 0.28);
               background-color: transparent;
               color: #2b1d12;
-              font-size: 12px;
+              font-size: 12.5px;
               outline: none;
               box-sizing: border-box;
             }
             .write-textarea {
               width: 100%;
-              padding: 7px 9px;
+              padding: 8px 10px;
               border-radius: 8px;
               border: 1px solid rgba(59, 40, 24, 0.28);
               background-color: transparent;
               color: #2b1d12;
-              font-size: 12px;
-              line-height: 1.42;
+              font-size: 12.5px;
+              line-height: 1.45;
               resize: none;
-              min-height: 76px;
+              min-height: 110px;
               outline: none;
               box-sizing: border-box;
             }
@@ -530,15 +533,17 @@ export default function App() {
               color: #5c4632;
               text-align: right;
               margin-top: 4px;
-              margin-bottom: 6px;
             }
             .write-submit-btn {
-              padding: 6px 13px;
+              position: absolute;
+              bottom: 62px;
+              right: 68px;
+              padding: 7px 15px;
               border-radius: 999px;
               border: none;
               background-color: #0284c7;
               color: #ffffff;
-              font-size: 12px;
+              font-size: 12.5px;
               font-weight: 700;
               cursor: pointer;
             }
@@ -550,7 +555,15 @@ export default function App() {
               .write-sheet {
                 max-width: 440px;
                 min-height: 440px;
-                padding: 104px 72px 96px 72px;
+                padding: 64px 66px 96px 66px;
+              }
+              .write-close-btn {
+                top: 52px;
+                right: 54px;
+              }
+              .write-submit-btn {
+                bottom: 58px;
+                right: 54px;
               }
             }
           `}</style>
@@ -560,25 +573,16 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleDropBottle}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "8px",
-                marginBottom: "8px",
-              }}
+            <button
+              type="button"
+              onClick={() => setModalMode(null)}
+              aria-label="Đóng"
+              className="write-close-btn"
             >
-              <h3 className="write-title">Gửi tâm sự vào chai</h3>
-              <button
-                type="button"
-                onClick={() => setModalMode(null)}
-                aria-label="Đóng"
-                className="write-close-btn"
-              >
-                ✕
-              </button>
-            </div>
+              ✕
+            </button>
+
+            <h3 className="write-title">Gửi tâm sự vào chai</h3>
 
             <input
               type="text"
@@ -589,7 +593,7 @@ export default function App() {
             />
 
             <textarea
-              rows={3}
+              rows={4}
               maxLength={500}
               required
               placeholder="Viết điều bạn muốn gửi ra biển (tối đa 500 ký tự)..."
@@ -607,30 +611,21 @@ export default function App() {
                   backgroundColor: "transparent",
                   fontSize: "11.5px",
                   fontWeight: 600,
-                  marginTop: 0,
-                  marginBottom: "6px",
+                  marginTop: "4px",
+                  marginBottom: 0,
                 }}
               >
                 {statusMsg}
               </p>
             )}
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                marginTop: "auto",
-              }}
+            <button
+              type="submit"
+              disabled={loading}
+              className="write-submit-btn"
             >
-              <button
-                type="submit"
-                disabled={loading}
-                className="write-submit-btn"
-              >
-                {loading ? "Đang thả..." : "Thả xuống biển"}
-              </button>
-            </div>
+              {loading ? "Đang thả..." : "Thả xuống biển"}
+            </button>
           </form>
         </div>
       )}

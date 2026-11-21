@@ -1,53 +1,42 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { createClient } from "@supabase/supabase-js";
-import beachBg from "./assets/beach-bg.png";
-import bottleImg from "./assets/bottle.png";
-import letterImg from "./assets/letter.png";
-import writePanelImg from "./assets/write-panel.png";
-import dropImg from "./assets/drop.png";
-import sonImg from "./assets/son.png";
-import soffImg from "./assets/soff.png";
-import storageImg from "./assets/storage.png";
-import gameImg from "./assets/game.png";
-import wave1 from "./assets/wave-1.png";
-import wave2 from "./assets/wave-2.png";
-import wave3 from "./assets/wave-3.png";
-import wave4 from "./assets/wave-4.png";
-import wave5 from "./assets/wave-5.png";
-import wave6 from "./assets/wave-6.png";
-import bird1 from "./assets/bird-1.png";
-import bird2 from "./assets/bird-2.png";
-import bird3 from "./assets/bird-3.png";
-import bird4 from "./assets/bird-4.png";
-import bird5 from "./assets/bird-5.png";
-import cloud1 from "./assets/cloud-1.png";
-import cloud2 from "./assets/cloud-2.png";
-import cloud3 from "./assets/cloud-3.png";
-import cloud4 from "./assets/cloud-4.png";
-import ambientSeaAudio from "./assets/ambient-sea.mp3";
+import { supabase } from "./supabaseClient";
+import {
+  SCENE_IMAGES,
+  AMBIENT_SEA_AUDIO,
+  WAVE_FRAMES,
+  BIRD_FRAMES,
+  CLOUD_FRAMES,
+  WAVE_FRAME_DURATION_MS,
+  BIRD_FRAME_DURATION_MS,
+  CLOUD_MOVE_DURATION_MS,
+  CLOUD_CYCLE_MS,
+  BOTTLE_INITIAL_DELAY_MS,
+  BOTTLE_VISIBLE_DURATION_MS,
+  BOTTLE_RESPAWN_DELAY_MS,
+  READ_AUTO_CLOSE_MS,
+} from "./constants/sceneAssets";
+import SceneBackdrop from "./components/SceneBackdrop";
+import WriteBottleModal from "./components/WriteBottleModal";
+import ReadBottleModal from "./components/ReadBottleModal";
+import MyBottlesModal from "./components/MyBottlesModal";
+import MenuModal from "./components/MenuModal";
+import AccountSyncModal from "./components/AccountSyncModal";
 import ShellGameModal from "./game/ShellGameModal";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { claimDailyLoginBonus, loadRewardState } from "./game/seaLetterRewardEngine";
+import {
+  changeShells,
+  claimDailyShells,
+  fetchMyShells,
+} from "./services/shellAuthService";
+import { pruneOldBottles, MAX_SEA_BOTTLES } from "./utils/bottleRetention";
 
 const SEEN_BOTTLES_KEY = "bien_xanh_seen_bottle_ids";
 const MY_BOTTLES_KEY = "bien_xanh_my_bottle_ids";
-
-const WAVE_FRAME_DURATION_MS = 2000;
-const BIRD_FRAME_DURATION_MS = 550;
-const CLOUD_MOVE_DURATION_MS = 87000;
-const CLOUD_CYCLE_MS = 88800;
-
-const BOTTLE_INITIAL_DELAY_MS = 5000;
-const BOTTLE_VISIBLE_DURATION_MS = 15000;
-const BOTTLE_RESPAWN_DELAY_MS = 30000;
-const READ_AUTO_CLOSE_MS = 180000;
-
-const WAVE_FRAMES = [wave1, wave2, wave3, wave4, wave5, wave6];
-const BIRD_FRAMES = [bird1, bird2, bird3, bird4, bird5];
-const CLOUD_FRAMES = [cloud1, cloud2, cloud3, cloud4];
+const VOLUME_STORAGE_KEY = "bien_xanh_sea_volume_v1";
+const DAILY_FIVE_SHELL_CLAIMED_KEY = "bien_xanh_daily_5_shell_claimed_day";
+const DEFAULT_SEA_VOLUME = 0.28;
+const MINIGAME_BG_VOLUME = 0.15;
+const DAILY_WELCOME_SHELL_POINTS = 5;
 
 function getIdList(key) {
   try {
@@ -63,13 +52,48 @@ function addIdToList(key, id) {
   if (!id) return;
   const current = getIdList(key);
   if (!current.includes(id)) {
-    const updated = [id, ...current];
-    localStorage.setItem(key, JSON.stringify(updated));
+    localStorage.setItem(key, JSON.stringify([id, ...current]));
   }
 }
 
 function clearIdList(key) {
   localStorage.removeItem(key);
+}
+
+function loadInitialVolume() {
+  try {
+    const saved = Number(localStorage.getItem(VOLUME_STORAGE_KEY));
+    if (Number.isFinite(saved) && saved >= 0 && saved <= 1) {
+      return saved;
+    }
+  } catch {
+    // Bỏ qua nếu trình duyệt chặn localStorage
+  }
+  return DEFAULT_SEA_VOLUME;
+}
+
+function getLocalDayKey(now = Date.now()) {
+  const d = new Date(now);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function hasClaimedDailyFiveShells(dayKey) {
+  try {
+    return localStorage.getItem(DAILY_FIVE_SHELL_CLAIMED_KEY) === dayKey;
+  } catch {
+    return false;
+  }
+}
+
+function markClaimedDailyFiveShells(dayKey) {
+  try {
+    localStorage.setItem(DAILY_FIVE_SHELL_CLAIMED_KEY, dayKey);
+  } catch {
+    // Bỏ qua nếu trình duyệt chặn localStorage
+  }
 }
 
 function createRandomCloudFlock(frameCount) {
@@ -191,6 +215,15 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [extraNote, setExtraNote] = useState("");
 
+  const [playerUser, setPlayerUser] = useState(null);
+  const [rewardState, setRewardState] = useState(() =>
+    claimDailyLoginBonus().state
+  );
+  const [dailyBonusToast, setDailyBonusToast] = useState("");
+
+  const didDailyFiveCheckRef = useRef(false);
+  const lastSyncedShellsRef = useRef(null);
+
   const [bottleVisible, setBottleVisible] = useState(false);
   const bottleTimerRef = useRef(null);
   const pickedInCurrentCycleRef = useRef(false);
@@ -198,6 +231,7 @@ export default function App() {
 
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(() => loadInitialVolume());
 
   const [activeWaveIndex, setActiveWaveIndex] = useState(0);
   const [activeBirdIndex, setActiveBirdIndex] = useState(0);
@@ -208,9 +242,113 @@ export default function App() {
   const [cloudDrifting, setCloudDrifting] = useState(false);
   const [cloudVisible, setCloudVisible] = useState(true);
 
-  const [content, setContent] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [statusMsg, setStatusMsg] = useState("");
+  const syncServerShells = useCallback(async (showToastIfClaimed = false) => {
+    const now = Date.now();
+    const dayKey = getLocalDayKey(now);
+    const localInit = claimDailyLoginBonus(now).state;
+    const fallbackShells = localInit?.shellPoints ?? 0;
+
+    const profile = await fetchMyShells(fallbackShells);
+    if (profile?.user) {
+      setPlayerUser(profile.user);
+    }
+
+    let authoritativeShells =
+      typeof profile?.shells === "number" ? profile.shells : fallbackShells;
+
+    const alreadyClaimedOnServer = profile?.lastDailyClaimDay === dayKey;
+    const alreadyClaimedLocally = hasClaimedDailyFiveShells(dayKey);
+
+    if (profile?.user && !alreadyClaimedOnServer && !alreadyClaimedLocally) {
+      const serverClaimedShells = await claimDailyShells(
+        dayKey,
+        DAILY_WELCOME_SHELL_POINTS
+      );
+      if (typeof serverClaimedShells === "number") {
+        authoritativeShells = serverClaimedShells;
+        markClaimedDailyFiveShells(dayKey);
+        if (showToastIfClaimed) {
+          setDailyBonusToast(
+            `Bạn nhận được +${DAILY_WELCOME_SHELL_POINTS} điểm sò hôm nay!`
+          );
+        }
+      }
+    } else if (alreadyClaimedOnServer) {
+      markClaimedDailyFiveShells(dayKey);
+    }
+
+    lastSyncedShellsRef.current = authoritativeShells;
+    setRewardState((prev) => ({
+      ...prev,
+      shellPoints: authoritativeShells,
+    }));
+
+    return authoritativeShells;
+  }, []);
+
+  useEffect(() => {
+    const now = Date.now();
+    const init = claimDailyLoginBonus(now);
+    setRewardState(init.state);
+
+    if (!didDailyFiveCheckRef.current) {
+      didDailyFiveCheckRef.current = true;
+      syncServerShells(true);
+    }
+
+    const interval = setInterval(() => {
+      const tickNow = Date.now();
+      setRewardState((prev) => {
+        const latest = loadRewardState(tickNow);
+        if (
+          latest.daily.dayKey !== prev.daily.dayKey ||
+          latest.daily.lettersSentCount !== prev.daily.lettersSentCount
+        ) {
+          return {
+            ...latest,
+            shellPoints: prev.shellPoints,
+          };
+        }
+        return prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [syncServerShells]);
+
+  useEffect(() => {
+    if (!dailyBonusToast) return;
+    const t = setTimeout(() => setDailyBonusToast(""), 4000);
+    return () => clearTimeout(t);
+  }, [dailyBonusToast]);
+
+  const handleRewardUpdated = useCallback(
+    async (nextState) => {
+      const prevShells = lastSyncedShellsRef.current ?? rewardState.shellPoints ?? 0;
+      const candidateShells =
+        typeof nextState?.shellPoints === "number"
+          ? nextState.shellPoints
+          : prevShells;
+      const diff = Math.trunc(candidateShells - prevShells);
+
+      setRewardState({
+        ...nextState,
+        shellPoints: prevShells,
+      });
+
+      if (diff !== 0) {
+        const nextServerShells = await changeShells(diff, 200);
+        if (typeof nextServerShells === "number") {
+          lastSyncedShellsRef.current = nextServerShells;
+          setRewardState((prev) => ({
+            ...prev,
+            shellPoints: nextServerShells,
+          }));
+        }
+      }
+    },
+    [rewardState.shellPoints]
+  );
 
   const clearBottleTimer = useCallback(() => {
     if (bottleTimerRef.current) {
@@ -250,21 +388,13 @@ export default function App() {
 
   useEffect(() => {
     scheduleHiddenThenAppear(BOTTLE_INITIAL_DELAY_MS);
-    return () => {
-      clearBottleTimer();
-    };
+    return () => clearBottleTimer();
   }, [scheduleHiddenThenAppear, clearBottleTimer]);
 
   useEffect(() => {
     if (modalMode !== "read") return;
-
-    const autoCloseTimer = setTimeout(() => {
-      setModalMode(null);
-    }, READ_AUTO_CLOSE_MS);
-
-    return () => {
-      clearTimeout(autoCloseTimer);
-    };
+    const autoCloseTimer = setTimeout(() => setModalMode(null), READ_AUTO_CLOSE_MS);
+    return () => clearTimeout(autoCloseTimer);
   }, [modalMode]);
 
   useEffect(() => {
@@ -314,7 +444,6 @@ export default function App() {
 
     const runCycle = () => {
       if (cancelled) return;
-
       setCloudDrifting(false);
       setCloudVisible(true);
 
@@ -347,9 +476,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const audio = new Audio(ambientSeaAudio);
+    const audio = new Audio(AMBIENT_SEA_AUDIO);
     audio.loop = true;
-    audio.volume = 0.28;
+    audio.volume = volume;
     audioRef.current = audio;
 
     return () => {
@@ -357,6 +486,17 @@ export default function App() {
       audio.src = "";
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VOLUME_STORAGE_KEY, String(volume));
+    } catch {
+      // Bỏ qua nếu localStorage bị chặn
+    }
+    if (!audioRef.current) return;
+    audioRef.current.volume =
+      modalMode === "minigame" ? Math.min(volume, MINIGAME_BG_VOLUME) : volume;
+  }, [volume, modalMode]);
 
   const ensureMusicPlaying = async () => {
     const audio = audioRef.current;
@@ -369,11 +509,41 @@ export default function App() {
     }
   };
 
+  const handleChangeVolume = async (nextVolume) => {
+    const clamped = Math.max(0, Math.min(1, Number(nextVolume) || 0));
+    setVolume(clamped);
+
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume =
+      modalMode === "minigame" ? Math.min(clamped, MINIGAME_BG_VOLUME) : clamped;
+
+    if (clamped > 0 && audio.paused) {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+    } else if (clamped === 0 && !audio.paused) {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  };
+
   const toggleMusic = async () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (audio.paused) {
+      const targetVol = volume > 0 ? volume : DEFAULT_SEA_VOLUME;
+      if (volume === 0) {
+        setVolume(targetVol);
+        audio.volume =
+          modalMode === "minigame"
+            ? Math.min(targetVol, MINIGAME_BG_VOLUME)
+            : targetVol;
+      }
       try {
         await audio.play();
         setIsPlaying(true);
@@ -428,56 +598,17 @@ export default function App() {
 
     if (unseenBottles.length === 0) {
       clearIdList(SEEN_BOTTLES_KEY);
-      seenIds = [];
       unseenBottles = data;
     }
 
     const newestPool = unseenBottles.slice(0, 10);
     const olderPool = unseenBottles.slice(10);
-
-    let chosenPool = newestPool;
-    if (olderPool.length > 0 && Math.random() >= 0.75) {
-      chosenPool = olderPool;
-    }
+    const chosenPool =
+      olderPool.length > 0 && Math.random() >= 0.75 ? olderPool : newestPool;
 
     const chosen = chosenPool[Math.floor(Math.random() * chosenPool.length)];
     addIdToList(SEEN_BOTTLES_KEY, chosen.id);
     setCurrentBottle(chosen);
-  };
-
-  const handleDropBottle = async (e) => {
-    e.preventDefault();
-    if (!content.trim()) return;
-
-    setLoading(true);
-    setStatusMsg("");
-
-    const { data, error } = await supabase
-      .from("bottles")
-      .insert([
-        {
-          content: content.trim(),
-          nickname: nickname.trim() || null,
-        },
-      ])
-      .select()
-      .single();
-
-    setLoading(false);
-
-    if (error) {
-      setStatusMsg("Có lỗi khi thả chai: " + error.message);
-      return;
-    }
-
-    if (data?.id) {
-      addIdToList(MY_BOTTLES_KEY, data.id);
-    }
-
-    setContent("");
-    setNickname("");
-    setModalMode(null);
-    alert("Chiếc chai của bạn đã được thả trôi ra biển!");
   };
 
   const handleOpenMyBottles = async () => {
@@ -503,6 +634,11 @@ export default function App() {
     if (!error && data) {
       setMyBottles(data);
     }
+  };
+
+  const handleBottleSaved = async (id) => {
+    addIdToList(MY_BOTTLES_KEY, id);
+    await pruneOldBottles(MAX_SEA_BOTTLES);
   };
 
   return (
@@ -543,6 +679,49 @@ export default function App() {
             max-height: 100dvh;
             aspect-ratio: 9 / 16;
           }
+        }
+        .coin-points-badge {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          background: transparent;
+          border: none;
+          box-shadow: none;
+          backdrop-filter: none;
+          color: #5c3214;
+          padding: 0;
+          font-family: "Patrick Hand", "Mali", cursive, sans-serif;
+          font-size: 36px;
+          line-height: 1;
+          font-weight: 700;
+          text-shadow: 0 2px 6px rgba(255, 253, 247, 0.85);
+          z-index: 25;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .coin-points-badge img {
+          width: 36px;
+          height: 36px;
+          object-fit: contain;
+          display: block;
+        }
+        .daily-bonus-banner {
+          position: absolute;
+          top: 58px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: rgba(15, 52, 96, 0.92);
+          color: #fffdf7;
+          padding: 6px 14px;
+          border-radius: 999px;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+          z-index: 26;
+          pointer-events: none;
         }
         .sky-clouds-layer {
           position: absolute;
@@ -631,6 +810,10 @@ export default function App() {
           display: block;
           filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
         }
+        .dock-menu-btn img {
+          width: 76px;
+          height: 76px;
+        }
         .dock-extra-slot {
           width: 96px;
           height: 96px;
@@ -658,7 +841,7 @@ export default function App() {
       `}</style>
 
       <img
-        src={beachBg}
+        src={SCENE_IMAGES.beachBg}
         alt=""
         aria-hidden="true"
         style={{
@@ -687,133 +870,37 @@ export default function App() {
         }}
       >
         <div className="scene-frame">
-          <img
-            src={beachBg}
-            alt="Bãi biển"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
+          <div className="coin-points-badge">
+            <span>{rewardState.shellPoints}</span>
+            <img src={SCENE_IMAGES.coinImg} alt="Coin" />
+          </div>
+
+          {dailyBonusToast && (
+            <div className="daily-bonus-banner">{dailyBonusToast}</div>
+          )}
+
+          <SceneBackdrop
+            beachBg={SCENE_IMAGES.beachBg}
+            bottleImg={SCENE_IMAGES.bottleImg}
+            cloudFlock={cloudFlock}
+            cloudDrifting={cloudDrifting}
+            cloudVisible={cloudVisible}
+            cloudMoveDurationMs={CLOUD_MOVE_DURATION_MS}
+            activeWaveIndex={activeWaveIndex}
+            activeBirdIndex={activeBirdIndex}
+            bottleVisible={bottleVisible}
+            onPickBottle={handlePickBottle}
           />
-
-          {cloudFlock.map((cloud) => (
-            <div
-              key={cloud.id}
-              aria-hidden="true"
-              className="sky-clouds-layer"
-              style={{
-                left: cloud.left,
-                top: cloud.top,
-                opacity: cloudVisible ? 0.92 : 0,
-                transform: `translateX(${cloudDrifting ? cloud.driftPx : 0}px) scale(${cloud.scale})`,
-                transition: cloudDrifting
-                  ? `transform ${CLOUD_MOVE_DURATION_MS}ms linear, opacity 0.75s ease-in-out`
-                  : "transform 0s linear, opacity 0.75s ease-in-out",
-              }}
-            >
-              <img
-                src={CLOUD_FRAMES[cloud.frameIndex]}
-                alt=""
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                }}
-              />
-            </div>
-          ))}
-
-          <div aria-hidden="true" className="wave-overlay">
-            {WAVE_FRAMES.map((frameSrc, idx) => (
-              <img
-                key={idx}
-                src={frameSrc}
-                alt=""
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "fill",
-                  opacity: idx === activeWaveIndex ? 1 : 0,
-                  transition: "opacity 0.35s ease-in-out",
-                }}
-              />
-            ))}
-          </div>
-
-          <div aria-hidden="true" className="sky-birds-layer">
-            {BIRD_FRAMES.map((frameSrc, idx) => (
-              <img
-                key={idx}
-                src={frameSrc}
-                alt=""
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                  opacity: idx === activeBirdIndex ? 1 : 0,
-                  transition: "opacity 0.08s linear",
-                }}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            className="floating-bottle"
-            onClick={handlePickBottle}
-            disabled={!bottleVisible}
-            aria-hidden={!bottleVisible}
-            title="Nhặt chai lên đọc"
-            style={{
-              position: "absolute",
-              left: "40%",
-              top: "73%",
-              minWidth: "64px",
-              minHeight: "64px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "transparent",
-              border: "none",
-              padding: 0,
-              cursor: bottleVisible ? "pointer" : "default",
-              opacity: bottleVisible ? 1 : 0,
-              pointerEvents: bottleVisible ? "auto" : "none",
-              zIndex: 15,
-            }}
-          >
-            <img
-              src={bottleImg}
-              alt="Chai thư"
-              style={{
-                position: "relative",
-                width: "100px",
-                height: "auto",
-                display: "block",
-              }}
-            />
-          </button>
 
           <div className="bottom-dock">
             <button
               type="button"
-              onClick={toggleMusic}
-              aria-label={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
-              title={isPlaying ? "Tắt nhạc nền" : "Bật nhạc nền"}
-              className="dock-slot-btn"
+              onClick={() => setModalMode("menu")}
+              aria-label="Mở menu"
+              title="Menu"
+              className="dock-slot-btn dock-menu-btn"
             >
-              <img
-                src={isPlaying ? sonImg : soffImg}
-                alt={isPlaying ? "Âm thanh bật" : "Âm thanh tắt"}
-              />
+              <img src={SCENE_IMAGES.menuImg} alt="Menu" />
             </button>
 
             <button
@@ -823,21 +910,20 @@ export default function App() {
               title="Thư của tôi"
               className="dock-slot-btn"
             >
-              <img src={storageImg} alt="Thư của tôi" />
+              <img src={SCENE_IMAGES.storageImg} alt="Thư của tôi" />
             </button>
 
             <button
               type="button"
               onClick={async () => {
                 await ensureMusicPlaying();
-                setStatusMsg("");
                 setModalMode("write");
               }}
               aria-label="Thả chai xuống biển"
               title="Thả chai xuống biển"
               className="dock-slot-btn"
             >
-              <img src={letterImg} alt="Thả chai xuống biển" />
+              <img src={SCENE_IMAGES.letterImg} alt="Thả chai xuống biển" />
             </button>
 
             <button
@@ -850,7 +936,7 @@ export default function App() {
               title="Mục 1 - Mini game Vỏ sò"
               className="dock-slot-btn"
             >
-              <img src={gameImg} alt="Mục 1" />
+              <img src={SCENE_IMAGES.gameImg} alt="Mục 1" />
             </button>
 
             <button
@@ -868,6 +954,31 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {modalMode === "sync" && (
+        <AccountSyncModal
+          isOpen={true}
+          onClose={() => setModalMode(null)}
+          currentUser={playerUser}
+          onAccountUpdated={async () => {
+            await syncServerShells(false);
+          }}
+        />
+      )}
+
+      {modalMode === "menu" && (
+        <MenuModal
+          isPlaying={isPlaying}
+          volume={volume}
+          sonImg={SCENE_IMAGES.sonImg}
+          soffImg={SCENE_IMAGES.soffImg}
+          accImg={SCENE_IMAGES.accImg}
+          onToggleMusic={toggleMusic}
+          onChangeVolume={handleChangeVolume}
+          onOpenAccountSync={() => setModalMode("sync")}
+          onClose={() => setModalMode(null)}
+        />
+      )}
 
       {modalMode === "minigame" && (
         <GameErrorBoundary onClose={() => setModalMode(null)}>
@@ -923,455 +1034,32 @@ export default function App() {
       )}
 
       {modalMode === "read" && (
-        <div
-          onClick={() => !loading && setModalMode(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(9, 30, 58, 0.45)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "12px",
-            zIndex: 30,
-          }}
-        >
-          <style>{`
-            .read-sheet {
-              position: relative;
-              color-scheme: light;
-              background-image: url(${writePanelImg});
-              background-size: 100% 100%;
-              background-repeat: no-repeat;
-              background-position: center;
-              background-color: transparent;
-              color: #3b2818;
-              width: 100%;
-              max-width: 520px;
-              min-height: 460px;
-              max-height: 92dvh;
-              overflow-y: auto;
-              padding: 72px 86px 126px 86px;
-              box-sizing: border-box;
-              display: flex;
-              flex-direction: column;
-            }
-            .read-title {
-              margin: 0 0 14px 0;
-              text-align: center;
-              font-size: 16px;
-              color: #0f3460;
-              font-weight: 700;
-              flex-shrink: 0;
-            }
-            .read-body {
-              margin: 0;
-              font-family: "Patrick Hand", "Mali", cursive, sans-serif;
-              font-size: 16px;
-              line-height: 1.65;
-              color: #2b1d12;
-              white-space: pre-wrap;
-              word-break: break-word;
-            }
-            .read-close-btn {
-              position: absolute;
-              bottom: 24px;
-              left: 50%;
-              transform: translateX(-50%);
-              padding: 0;
-              border: none;
-              background: transparent;
-              -webkit-appearance: none;
-              appearance: none;
-              cursor: pointer;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              transition: opacity 0.2s ease, transform 0.15s ease;
-              z-index: 5;
-            }
-            .read-close-btn:hover {
-              transform: translateX(-50%) scale(1.04);
-            }
-            .read-close-img {
-              width: 108px;
-              height: auto;
-              display: block;
-            }
-            @media (max-width: 600px) {
-              .read-sheet {
-                max-width: 440px;
-                min-height: 420px;
-                padding: 66px 66px 104px 66px;
-              }
-              .read-body {
-                font-size: 15.5px;
-                line-height: 1.6;
-              }
-              .read-close-btn {
-                bottom: 22px;
-                left: 50%;
-                transform: translateX(-50%);
-              }
-              .read-close-img {
-                width: 94px;
-              }
-            }
-          `}</style>
-
-          <div className="read-sheet" onClick={(e) => e.stopPropagation()}>
-            <h3 className="read-title">
-              Thư từ {currentBottle?.nickname || "một người lạ"}
-            </h3>
-            {loading ? (
-              <p className="read-body" style={{ textAlign: "center" }}>
-                Đang mở nút bần...
-              </p>
-            ) : (
-              <p className="read-body">{currentBottle?.content}</p>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setModalMode(null)}
-              aria-label="Đóng thư"
-              title="Đóng thư"
-              className="read-close-btn"
-            >
-              <img src={dropImg} alt="Đóng thư" className="read-close-img" />
-            </button>
-          </div>
-        </div>
+        <ReadBottleModal
+          bottle={currentBottle}
+          loading={loading}
+          writePanelImg={SCENE_IMAGES.writePanelImg}
+          dropImg={SCENE_IMAGES.dropImg}
+          onClose={() => setModalMode(null)}
+        />
       )}
 
       {modalMode === "write" && (
-        <div
-          onClick={() => !loading && setModalMode(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(9, 30, 58, 0.45)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "12px",
-            zIndex: 30,
-          }}
-        >
-          <style>{`
-            .write-sheet {
-              position: relative;
-              color-scheme: light;
-              background-image: url(${writePanelImg});
-              background-size: 100% 100%;
-              background-repeat: no-repeat;
-              background-position: center;
-              background-color: transparent;
-              color: #3b2818;
-              width: 100%;
-              max-width: 520px;
-              min-height: 460px;
-              max-height: 92dvh;
-              overflow-y: auto;
-              padding: 68px 84px 126px 84px;
-              box-sizing: border-box;
-              display: flex;
-              flex-direction: column;
-            }
-            .write-title {
-              margin: 0 0 12px 0;
-              text-align: center;
-              font-size: 16px;
-              color: #0f3460;
-              font-weight: 700;
-              flex-shrink: 0;
-            }
-            .write-close-btn {
-              position: absolute;
-              top: 56px;
-              right: 68px;
-              width: 28px;
-              height: 28px;
-              min-width: 28px;
-              max-width: 28px;
-              flex: 0 0 28px;
-              padding: 0;
-              border-radius: 999px;
-              border: 1px solid rgba(59, 40, 24, 0.35);
-              background-color: rgba(255, 250, 238, 0.85);
-              -webkit-appearance: none;
-              appearance: none;
-              color: #3b2818;
-              font-size: 13px;
-              line-height: 1;
-              cursor: pointer;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              z-index: 5;
-            }
-            .write-input {
-              width: 100%;
-              padding: 7px 10px;
-              margin-bottom: 8px;
-              border-radius: 7px;
-              border: 1px solid rgba(59, 40, 24, 0.3);
-              background-color: rgba(255, 252, 244, 0.65);
-              -webkit-appearance: none;
-              appearance: none;
-              font-family: "Patrick Hand", "Mali", cursive, sans-serif;
-              color: #2b1d12;
-              font-size: 15px;
-              line-height: 1.4;
-              outline: none;
-              box-sizing: border-box;
-              flex-shrink: 0;
-            }
-            .write-input::placeholder,
-            .write-textarea::placeholder {
-              color: rgba(59, 40, 24, 0.65);
-            }
-            .write-textarea {
-              width: 100%;
-              padding: 8px 10px;
-              border-radius: 8px;
-              border: 1px solid rgba(59, 40, 24, 0.3);
-              background-color: rgba(255, 252, 244, 0.65);
-              -webkit-appearance: none;
-              appearance: none;
-              font-family: "Patrick Hand", "Mali", cursive, sans-serif;
-              color: #2b1d12;
-              font-size: 15.5px;
-              line-height: 1.55;
-              resize: none;
-              min-height: 110px;
-              outline: none;
-              box-sizing: border-box;
-              flex-shrink: 0;
-            }
-            .write-counter {
-              font-size: 11px;
-              color: #5c4632;
-              text-align: right;
-              margin-top: 4px;
-              flex-shrink: 0;
-            }
-            .write-submit-btn {
-              position: absolute;
-              bottom: 24px;
-              left: 50%;
-              transform: translateX(-50%);
-              padding: 0;
-              border: none;
-              background: transparent;
-              -webkit-appearance: none;
-              appearance: none;
-              cursor: pointer;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              transition: opacity 0.2s ease, transform 0.15s ease;
-              z-index: 5;
-            }
-            .write-submit-btn:hover:not(:disabled) {
-              transform: translateX(-50%) scale(1.04);
-            }
-            .write-submit-img {
-              width: 108px;
-              height: auto;
-              display: block;
-            }
-            @media (max-width: 600px) {
-              .write-sheet {
-                max-width: 440px;
-                min-height: 420px;
-                padding: 64px 66px 104px 66px;
-              }
-              .write-close-btn {
-                top: 52px;
-                right: 54px;
-              }
-              .write-submit-btn {
-                bottom: 22px;
-              }
-              .write-submit-img {
-                width: 94px;
-              }
-            }
-          `}</style>
-
-          <form
-            className="write-sheet"
-            onSubmit={handleDropBottle}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => !loading && setModalMode(null)}
-              aria-label="Đóng khung viết thư"
-              className="write-close-btn"
-            >
-              ✕
-            </button>
-
-            <h3 className="write-title">Viết thư thả vào chai</h3>
-
-            <input
-              type="text"
-              maxLength={40}
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="Biệt danh (không bắt buộc)"
-              className="write-input"
-            />
-
-            <textarea
-              rows={5}
-              maxLength={500}
-              required
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Gửi vài dòng tâm sự ra biển khơi..."
-              className="write-textarea"
-            />
-
-            <div className="write-counter">{content.length}/500</div>
-
-            {statusMsg && (
-              <p
-                style={{
-                  margin: "6px 0 0 0",
-                  fontSize: "12px",
-                  color: "#b91c1c",
-                  textAlign: "center",
-                }}
-              >
-                {statusMsg}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || !content.trim()}
-              aria-label="Thả chai"
-              title="Thả chai"
-              className="write-submit-btn"
-              style={{ opacity: loading || !content.trim() ? 0.55 : 1 }}
-            >
-              <img src={dropImg} alt="Thả chai" className="write-submit-img" />
-            </button>
-          </form>
-        </div>
+        <WriteBottleModal
+          writePanelImg={SCENE_IMAGES.writePanelImg}
+          dropImg={SCENE_IMAGES.dropImg}
+          rewardState={rewardState}
+          onClose={() => setModalMode(null)}
+          onBottleSaved={handleBottleSaved}
+          onRewardUpdated={handleRewardUpdated}
+        />
       )}
 
       {modalMode === "mine" && (
-        <div
-          onClick={() => !loading && setModalMode(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(9, 30, 58, 0.5)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "12px",
-            zIndex: 30,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#fffdf7",
-              color: "#2b1d12",
-              width: "100%",
-              maxWidth: "460px",
-              maxHeight: "82dvh",
-              overflowY: "auto",
-              borderRadius: "18px",
-              padding: "18px",
-              boxSizing: "border-box",
-              boxShadow: "0 14px 36px rgba(0, 0, 0, 0.35)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "12px",
-              }}
-            >
-              <h3 style={{ margin: 0, fontSize: "16px", color: "#0f3460" }}>
-                Thư của tôi
-              </h3>
-              <button
-                type="button"
-                onClick={() => setModalMode(null)}
-                style={{
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "6px 12px",
-                  backgroundColor: "#0284c7",
-                  color: "#fff",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Đóng
-              </button>
-            </div>
-
-            {loading ? (
-              <p style={{ textAlign: "center", color: "#475569" }}>
-                Đang tải danh sách thư...
-              </p>
-            ) : myBottles.length === 0 ? (
-              <p style={{ textAlign: "center", color: "#64748b" }}>
-                Bạn chưa thả chiếc chai nào trên thiết bị này.
-              </p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {myBottles.map((item) => (
-                  <div
-                    key={item.id}
-                    style={{
-                      backgroundColor: "#fef9ec",
-                      border: "1px solid rgba(59, 40, 24, 0.18)",
-                      borderRadius: "12px",
-                      padding: "12px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: "#0f3460",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      {item.nickname || "Ẩn danh"}
-                    </div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontFamily: '"Patrick Hand", "Mali", cursive, sans-serif',
-                        fontSize: "15.5px",
-                        lineHeight: 1.5,
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {item.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <MyBottlesModal
+          bottles={myBottles}
+          loading={loading}
+          onClose={() => setModalMode(null)}
+        />
       )}
     </div>
   );

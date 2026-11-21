@@ -26,34 +26,42 @@ export default function SceneBackdrop({
         }}
       />
 
-      {cloudFlock.map((cloud) => (
-        <div
-          key={cloud.id}
-          aria-hidden="true"
-          className="sky-clouds-layer"
-          style={{
-            left: cloud.left,
-            top: cloud.top,
-            opacity: cloudVisible ? 0.92 : 0,
-            transform: `translateX(${cloudDrifting ? cloud.driftPx : 0}px) scale(${cloud.scale})`,
-            transition: cloudDrifting
-              ? `transform ${cloudMoveDurationMs}ms linear, opacity 0.75s ease-in-out`
-              : "transform 0s linear, opacity 0.75s ease-in-out",
-          }}
-        >
-          <img
-            src={CLOUD_FRAMES[cloud.frameIndex]}
-            alt=""
+      {cloudFlock.map((cloud) => {
+        const cloudSrc = CLOUD_FRAMES[cloud.frameIndex] || CLOUD_FRAMES[0];
+        if (!cloudSrc) return null;
+
+        return (
+          <div
+            key={cloud.id}
+            aria-hidden="true"
+            className="sky-clouds-layer"
             style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
+              left: cloud.left,
+              top: cloud.top,
+              opacity: cloudVisible ? 0.92 : 0,
+              transform: `translateX(${cloudDrifting ? cloud.driftPx : 0}px) scale(${cloud.scale})`,
+              transition: cloudDrifting
+                ? `transform ${cloudMoveDurationMs}ms linear, opacity 0.75s ease-in-out`
+                : "transform 0s linear, opacity 0.75s ease-in-out",
             }}
-          />
-        </div>
-      ))}
+          >
+            <img
+              src={cloudSrc}
+              alt=""
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
+            />
+          </div>
+        );
+      })}
 
       <div aria-hidden="true" className="wave-overlay">
         {WAVE_FRAMES.map((frameSrc, idx) => (

@@ -28,6 +28,18 @@ const SHELL_IMAGES = {
   "shell-7": shell7,
 };
 
+function resolveShellSrc(kind) {
+  if (!kind) return null;
+  const raw = String(kind).trim().toLowerCase();
+  if (SHELL_IMAGES[raw]) return SHELL_IMAGES[raw];
+
+  const match = raw.match(/^(?:shell[-_]?)?(\d+)$/);
+  if (match) {
+    return SHELL_IMAGES[`shell-${Number(match[1])}`] || null;
+  }
+  return null;
+}
+
 const TOTAL_LEVELS = LEVELS_1_TO_20?.length || 20;
 
 const UNLOCKED_LEVEL_KEY = "bien_xanh_shell_unlocked_level";
@@ -193,7 +205,6 @@ export default function ShellGameModal({
 
   const clampedVolume = Math.max(0, Math.min(1, Number(volume) || 0));
   const effectiveMuted = isMuted || !isPlaying || clampedVolume <= 0;
-  // Boost nhẹ để ngang bằng cảm nhận âm lượng với nhạc nền biển (vốn đang ở mức ~0.28)
   const effectiveGameVolume = effectiveMuted
     ? 0
     : Math.min(1, clampedVolume * 1.45);
@@ -946,7 +957,7 @@ export default function ShellGameModal({
                 const isDropped =
                   !isClearing && Boolean(cell.piece?.justDropped);
                 const kind = cell.piece?.kind;
-                const imgSrc = kind ? SHELL_IMAGES[kind] : null;
+                const imgSrc = resolveShellSrc(kind);
                 const baseId = cell.piece?.id || `${r}-${c}`;
                 const animKey = isDropped
                   ? `${baseId}-d${turnAnimId}`
@@ -964,7 +975,15 @@ export default function ShellGameModal({
                     } ${isDropped ? "shell-dropped" : ""}`}
                     aria-label={`Ô hàng ${r + 1} cột ${c + 1}`}
                   >
-                    {imgSrc && <img src={imgSrc} alt={kind} />}
+                    {imgSrc && (
+                      <img
+                        src={imgSrc}
+                        alt={kind}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    )}
                   </button>
                 );
               })
@@ -988,6 +1007,57 @@ export default function ShellGameModal({
             </div>
           </div>
 
+          {showLevelPicker && (
+            <div
+              className="shell-level-modal"
+              onClick={() => setShowLevelPicker(false)}
+            >
+              <div
+                className="shell-level-card"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <strong>Chọn màn (Đã mở: {unlockedLevel}/{TOTAL_LEVELS})</strong>
+                  <button
+                    type="button"
+                    onClick={() => setShowLevelPicker(false)}
+                    className="shell-close-x-btn"
+                    style={{ width: "26px", height: "26px", fontSize: "12px" }}
+                    aria-label="Đóng chọn màn"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="shell-level-grid">
+                  {Array.from({ length: TOTAL_LEVELS }, (_, idx) => idx + 1).map(
+                    (lvl) => {
+                      const locked = lvl > unlockedLevel;
+                      return (
+                        <button
+                          key={lvl}
+                          type="button"
+                          disabled={locked}
+                          onClick={() => startLevel(lvl)}
+                          className={`shell-lvl-item-btn ${
+                            lvl === currentLevelNum ? "current" : ""
+                          }`}
+                        >
+                          {locked ? "🔒" : lvl}
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {showGuideModal && (
             <div
               className="shell-level-modal"
@@ -1004,7 +1074,7 @@ export default function ShellGameModal({
                     justifyContent: "space-between",
                   }}
                 >
-                  <strong>Cách chơi & Tính điểm</strong>
+                  <strong>Cách chơi &amp; Tính điểm</strong>
                   <button
                     type="button"
                     onClick={() => setShowGuideModal(false)}
@@ -1042,115 +1112,47 @@ export default function ShellGameModal({
                       <strong>1x</strong>).
                     </li>
                     <li>
-                      <strong>Ghép 4 vỏ sò:</strong> nhân <strong>1.5x</strong>{" "}
-                      (45 điểm).
+                      <strong>Ghép 4 vỏ sò:</strong> hệ số <strong>1.5x</strong>.
                     </li>
                     <li>
-                      <strong>Ghép 5+ vỏ sò:</strong> nhân <strong>2.5x</strong>{" "}
-                      (75 điểm cho 5 ô), cộng thêm <strong>+0.5x</strong> mỗi ô
-                      vượt quá 5.
-                    </li>
-                    <li>
-                      <strong>Combo rơi liên hoàn:</strong> mỗi chuỗi rơi tự động
-                      tiếp theo tăng thêm <strong>+25%</strong> điểm của bước
-                      đó.
+                      <strong>Ghép 5+ hoặc Combo nhiều tầng:</strong> thưởng thêm
+                      điểm theo chuỗi liên hoàn.
                     </li>
                   </ul>
                 </div>
-
-                <div>
-                  <strong>Gợi ý:</strong> Tối đa <strong>3 điểm</strong>, tự
-                  hồi <strong>1 điểm mỗi 15 phút</strong> khi chưa đầy.
-                </div>
               </div>
             </div>
           )}
 
-          {showLevelPicker && (
-            <div
-              className="shell-level-modal"
-              onClick={() => setShowLevelPicker(false)}
-            >
-              <div
-                className="shell-level-card"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <strong>Chọn màn (1–{TOTAL_LEVELS})</strong>
-                  <button
-                    type="button"
-                    onClick={() => setShowLevelPicker(false)}
-                    className="shell-close-x-btn"
-                    style={{ width: "26px", height: "26px", fontSize: "12px" }}
-                    aria-label="Đóng chọn màn"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="shell-level-grid">
-                  {Array.from({ length: TOTAL_LEVELS }, (_, i) => i + 1).map(
-                    (lvl) => {
-                      const isLocked = lvl > unlockedLevel;
-                      const isCurrent = lvl === currentLevelNum;
-                      return (
-                        <button
-                          key={lvl}
-                          type="button"
-                          disabled={isLocked}
-                          onClick={() => startLevel(lvl)}
-                          className={`shell-lvl-item-btn ${
-                            isCurrent ? "current" : ""
-                          }`}
-                          title={
-                            isLocked
-                              ? `Chưa mở khóa Level ${lvl}`
-                              : `Chơi Level ${lvl}`
-                          }
-                        >
-                          {isLocked ? "🔒" : lvl}
-                        </button>
-                      );
-                    }
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {(gameStatus === "won" || gameStatus === "lost") && (
+          {gameStatus !== "playing" && (
             <div className="shell-end-overlay">
-              <h3 style={{ margin: 0, fontSize: "20px" }}>
-                {gameStatus === "won" ? "Chiến thắng!" : "Hết lượt đi"}
-              </h3>
-              <p style={{ margin: 0, fontSize: "13px" }}>
-                Điểm của bạn: <strong>{score}</strong> / {levelConfig.targetScore}
-              </p>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <strong style={{ fontSize: "18px" }}>
+                {gameStatus === "won"
+                  ? `Hoàn thành Level ${currentLevelNum}!`
+                  : "Hết lượt đi!"}
+              </strong>
+              <div style={{ fontSize: "13px" }}>
+                Điểm đạt được: <strong>{score}</strong> / {levelConfig.targetScore}
+              </div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => startLevel(currentLevelNum)}
+                  className="shell-action-btn"
+                  style={{ backgroundColor: "#e2e8f0", color: "#0f172a" }}
+                >
+                  Chơi lại màn
+                </button>
                 {gameStatus === "won" && currentLevelNum < TOTAL_LEVELS && (
                   <button
                     type="button"
                     onClick={() => startLevel(currentLevelNum + 1)}
                     className="shell-action-btn"
-                    style={{ backgroundColor: "#22c55e", color: "#fff" }}
+                    style={{ backgroundColor: "#38bdf8", color: "#061826" }}
                   >
-                    Màn tiếp theo
+                    Màn tiếp theo →
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => startLevel(currentLevelNum)}
-                  className="shell-action-btn"
-                  style={{ backgroundColor: "#0284c7", color: "#fff" }}
-                >
-                  Chơi lại màn {currentLevelNum}
-                </button>
               </div>
             </div>
           )}

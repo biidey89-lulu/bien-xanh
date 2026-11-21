@@ -9,6 +9,7 @@ import storageImg from "../assets/storage.png";
 import gameImg from "../assets/game.png";
 import coinImg from "../assets/coin.png";
 import menuImg from "../assets/menu.png";
+import accImg from "../assets/acc.png";
 import wave1 from "../assets/wave-1.png";
 import wave2 from "../assets/wave-2.png";
 import wave3 from "../assets/wave-3.png";
@@ -38,6 +39,7 @@ export const SCENE_IMAGES = {
   gameImg,
   coinImg,
   menuImg,
+  accImg,
 };
 
 export const AMBIENT_SEA_AUDIO = ambientSeaAudio;
